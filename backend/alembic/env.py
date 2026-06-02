@@ -26,7 +26,9 @@ if config.config_file_name is not None:
 # Metadatos de los modelos para autogenerate.
 # Se importa la Base declarativa del proyecto; en C-01 no hay modelos aún.
 # Los changes C-02+ agregan sus modelos aquí (heredan de Base).
-from app.core.database import Base  # noqa: E402
+from app.models.base import Base  # noqa: E402
+from app.models.tenant import Tenant  # noqa: F401
+from app.models.user import User, RefreshToken, PasswordResetToken  # noqa: F401
 
 target_metadata = Base.metadata
 

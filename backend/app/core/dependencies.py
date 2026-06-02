@@ -1,32 +1,55 @@
-"""Dependency injection de FastAPI para la sesión de base de datos.
+"""Dependency injection de FastAPI.
 
-get_db: async-generator que abre una sesión por request y la cierra en finally,
-garantizando que no haya fugas de conexión al pool aunque el handler lance excepción.
-
-Los slots get_current_user, get_tenant y require_permission se completarán en:
-    - get_current_user → C-03 (auth-jwt-2fa)
-    - get_tenant        → C-02 (core-models-y-tenancy)
-    - require_permission → C-04 (rbac-permisos-finos)
+- get_db: sesión async por request (asyncpg)
+- get_sync_db: sesión sync por request (psycopg2) — usada por el router de auth
+- get_current_user: resuelve identidad + tenant desde JWT verificado (C-03)
+- require_permission: guard RBAC modulo:accion — RESERVADO para C-04
 """
 
-from collections.abc import AsyncGenerator
+import uuid
+from collections.abc import AsyncGenerator, Generator
+from dataclasses import dataclass
 
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session, sessionmaker
 
+from app.core.config import Settings
 from app.core.database import get_session_factory
+from app.core.security import InvalidTokenError, decode_token
+
+_sync_engine = None
+_sync_session_factory = None
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=True)
+
+
+@dataclass
+class CurrentUser:
+    id: uuid.UUID
+    tenant_id: uuid.UUID
+    roles: list[str]
+
+
+def _get_sync_session_factory():
+    global _sync_engine, _sync_session_factory  # noqa: PLW0603
+    if _sync_session_factory is None:
+        settings = Settings()
+        sync_url = settings.database_url.replace("+asyncpg", "").replace("postgresql+asyncpg", "postgresql")
+        _sync_engine = create_engine(sync_url)
+        _sync_session_factory = sessionmaker(bind=_sync_engine, expire_on_commit=False)
+    return _sync_session_factory
+
+
+def get_sync_db() -> Generator[Session, None, None]:
+    factory = _get_sync_session_factory()
+    with factory() as session:
+        yield session
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Provee una sesión async por request, cerrándola al finalizar.
-
-    Uso:
-        @router.get("/resource")
-        async def handler(db: AsyncSession = Depends(get_db)):
-            ...
-
-    La sesión se cierra en el bloque finally aunque el handler lance excepción,
-    evitando fugas de conexiones al pool de asyncpg.
-    """
     factory = get_session_factory()
     async with factory() as session:
         try:
@@ -35,21 +58,43 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-# ── RESERVADO → C-03 (auth-jwt-2fa) ──────────────────────────────────────────
-# async def get_current_user(token: str = Depends(oauth2_scheme)) -> Usuario:
-#     """Resuelve la identidad del usuario desde el JWT verificado.
-#     NUNCA desde parámetros de URL o body — regla de oro de identidad."""
-#     raise NotImplementedError("RESERVADO para C-03")
+def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
+    """Resuelve la identidad del usuario EXCLUSIVAMENTE desde el JWT verificado.
 
+    Regla de oro: la identidad y el tenant NO se derivan de parámetros de la
+    request — solo del token verificado server-side.
+    """
+    try:
+        claims = decode_token(token)
+    except InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-# ── RESERVADO → C-02 (core-models-y-tenancy) ─────────────────────────────────
-# async def get_tenant(current_user = Depends(get_current_user)) -> Tenant:
-#     """Resuelve el tenant desde la sesión verificada del usuario."""
-#     raise NotImplementedError("RESERVADO para C-02")
+    if claims.get("scope") == "2fa_pending":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session incomplete — 2FA verification required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        return CurrentUser(
+            id=uuid.UUID(claims["sub"]),
+            tenant_id=uuid.UUID(claims["tenant_id"]),
+            roles=claims.get("roles", []),
+        )
+    except (KeyError, ValueError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token claims",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
 
 
 # ── RESERVADO → C-04 (rbac-permisos-finos) ───────────────────────────────────
 # def require_permission(permission: str):
-#     """Guard de RBAC: verifica que el usuario tenga el permiso modulo:accion.
-#     Sin permiso explícito → 403 (fail-closed)."""
+#     """Guard RBAC: verifica permiso modulo:accion. Sin él → 403 (fail-closed)."""
 #     raise NotImplementedError("RESERVADO para C-04")

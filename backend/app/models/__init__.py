@@ -1,5 +1,6 @@
 from app.models.base import Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, TenantMixin
 from app.models.tenant import Tenant
+from app.models.user import User, RefreshToken, PasswordResetToken
 
 __all__ = [
     "Base",
@@ -7,5 +8,8 @@ __all__ = [
     "TimestampMixin",
     "SoftDeleteMixin",
     "TenantMixin",
-    "Tenant"
+    "Tenant",
+    "User",
+    "RefreshToken",
+    "PasswordResetToken",
 ]
