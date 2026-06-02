@@ -19,7 +19,7 @@
 ## Árbol de dependencias
 
 ```
-C-01 foundation-setup (infra, Docker, FastAPI skel, DB inicial, OTel)
+[x] **C-01**: `foundation-setup` (infra, Docker, FastAPI skel, DB inicial, OTel)
 └── C-02 core-models-y-tenancy (Tenant, mixins, repo base con scope tenant, Alembic)
     └── C-03 auth-jwt-2fa (login, refresh rotation, recuperación, sesión)
         └── C-04 rbac-permisos-finos (roles, permisos modulo:accion, matriz, guard)
@@ -127,8 +127,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 
 ## FASE 0 — Cimiento e Infraestructura
 
-### [C-01] `foundation-setup`
-- **Estado**: `[x]` pendiente
+### [x] [C-01] `foundation-setup`
+- **Estado**: `[x]` completado
 - **Scope**:
   - Estructura de directorios Clean Architecture: `routers/`, `services/`, `repositories/`, `models/`, `schemas/`, `core/`, `integrations/`, `workers/`. Límite ≤500 LOC/archivo.
   - Esqueleto FastAPI con `app/main.py`, health-check `GET /health`, configuración Pydantic v2 Settings desde `.env`.
@@ -149,8 +149,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 
 > Cadena estrictamente secuencial. Es el corazón multi-tenant del sistema: nada se construye sin esto.
 
-### [C-02] `core-models-y-tenancy`
-- **Estado**: `[ ]` pendiente
+### [x] [C-02] `core-models-y-tenancy`
+- **Estado**: `[x]` completado
 - **Scope**:
   - Modelo `Tenant` raíz. Mixin base con `id` (UUID), `tenant_id`, `created_at`, `updated_at`, `deleted_at` (soft delete).
   - **Repository genérico** con scope de tenant SIEMPRE activo: todo query filtra por `tenant_id` por defecto (ADR-002 row-level). Un query sin scope debe fallar en review.

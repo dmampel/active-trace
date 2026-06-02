@@ -12,3 +12,11 @@ Thumbs.db
 .vscode/
 .idea/
 .env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+alembic_tmp/

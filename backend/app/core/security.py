@@ -1,15 +1,19 @@
-"""RESERVADO para C-03 (auth-jwt-2fa).
+from cryptography.fernet import Fernet
 
-Este módulo implementará:
-- Hashing de passwords con Argon2id
-- Firma y verificación de JWT (access + refresh tokens)
-- Cifrado/descifrado AES-256 para PII en reposo (CBU, DNI, email cifrado)
-- Rate limiting de intentos de login
+class AES256Cipher:
+    """
+    AES-256 (Fernet) Encryption helper for PII data.
+    Requires a valid 32-byte url-safe base64-encoded key.
+    """
+    def __init__(self, key: bytes):
+        # Fernet validates the key length and format on initialization
+        # If the key is invalid, it raises ValueError
+        self.fernet = Fernet(key)
 
-NO agregar lógica en este archivo hasta C-03. Su existencia es un contrato
-de extensión que guía a los agentes de changes futuros.
-"""
+    def encrypt(self, plaintext: str) -> str:
+        """Encrypts a string and returns the url-safe base64-encoded ciphertext."""
+        return self.fernet.encrypt(plaintext.encode()).decode()
 
-# Implementar en C-03: hash_password, verify_password
-# Implementar en C-03: create_access_token, create_refresh_token, decode_token
-# Implementar en C-03/C-02: encrypt_pii, decrypt_pii (AES-256)
+    def decrypt(self, ciphertext: str) -> str:
+        """Decrypts a url-safe base64-encoded ciphertext and returns the plaintext string."""
+        return self.fernet.decrypt(ciphertext.encode()).decode()
