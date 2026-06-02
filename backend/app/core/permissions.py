@@ -1,14 +1,26 @@
-"""RESERVADO para C-04 (rbac-permisos-finos).
+from typing import Callable, Set
+from fastapi import Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-Este módulo implementará:
-- Catálogo administrable de permisos (modulo:accion)
-- Resolución de permisos efectivos por usuario + roles + tenant
-- Guard require_permission(modulo:accion) para endpoints
-- Fail-closed: sin permiso explícito → 403
+from app.core.dependencies import CurrentUser, get_current_user, get_sync_db
+from app.repositories.rbac_repository import RbacRepository
 
-NO agregar lógica en este archivo hasta C-04.
-"""
+def has_permission(effective: Set[str], permission: str) -> bool:
+    return permission in effective
 
-# Implementar en C-04: has_permission(user, permission) -> bool
-# Implementar en C-04: get_effective_permissions(user, tenant) -> set[str]
-# Implementar en C-04: require_permission(permission: str) -> Depends(...)
+def require_permission(permission: str) -> Callable:
+    """Guard RBAC: verifica permiso modulo:accion. Sin él → 403 (fail-closed)."""
+    def permission_checker(
+        current_user: CurrentUser = Depends(get_current_user),
+        session: Session = Depends(get_sync_db),
+    ):
+        effective_perms = RbacRepository.get_effective_permissions(
+            session, current_user.id, current_user.tenant_id
+        )
+        if not has_permission(effective_perms, permission):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Forbidden: missing permission {permission}",
+            )
+        return True
+    return permission_checker

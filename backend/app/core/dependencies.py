@@ -95,6 +95,4 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
 
 
 # ── RESERVADO → C-04 (rbac-permisos-finos) ───────────────────────────────────
-# def require_permission(permission: str):
-#     """Guard RBAC: verifica permiso modulo:accion. Sin él → 403 (fail-closed)."""
-#     raise NotImplementedError("RESERVADO para C-04")
+# Implementado en app/core/permissions.py
