@@ -157,6 +157,20 @@ def test_logout_revokes_token(session, tenant, active_user):
         AuthService.refresh(session, tenant.id, tokens.refresh_token)
 
 
+def test_logout_wrong_tenant_does_not_revoke(session, tenant, active_user):
+    tokens = AuthService.login(session, tenant.id, "user@example.com", "correct_pass")
+    assert isinstance(tokens, TokenResponse)
+    session.commit()
+
+    other_tenant_id = uuid.uuid4()
+    AuthService.logout(session, other_tenant_id, tokens.refresh_token)
+    session.commit()
+
+    # Token must still be valid — wrong tenant cannot revoke it
+    result = AuthService.refresh(session, tenant.id, tokens.refresh_token)
+    assert isinstance(result, TokenResponse)
+
+
 # ── forgot_password ───────────────────────────────────────────────────────────
 
 def test_forgot_password_unknown_email_does_not_raise(session, tenant):

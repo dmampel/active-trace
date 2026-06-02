@@ -1,8 +1,10 @@
 import base64
+import io
 import uuid
 from datetime import datetime, timedelta, timezone
 
 import pyotp
+import qrcode
 
 from app.core.config import Settings
 from app.core.security import (
@@ -111,15 +113,12 @@ class AuthService:
     def logout(session, tenant_id: uuid.UUID, refresh_token_str: str) -> None:
         token_hash = hash_opaque_token(refresh_token_str)
         rt = UserRepository.get_refresh_token_by_hash(session, token_hash)
-        if rt and rt.revoked_at is None:
+        if rt and rt.revoked_at is None and rt.tenant_id == tenant_id:
             rt.revoked_at = datetime.now(timezone.utc)
 
     @staticmethod
     def totp_enroll(session, tenant_id: uuid.UUID, user_id: uuid.UUID) -> dict:
-        from app.models.user import User
-        from sqlalchemy import select
-        stmt = select(User).where(User.id == user_id, User.tenant_id == tenant_id)
-        user = session.execute(stmt).scalar_one_or_none()
+        user = UserRepository.get_by_id(session, tenant_id, user_id)
         if not user:
             raise AuthError("User not found")
 
@@ -128,21 +127,16 @@ class AuthService:
         user.totp_pending_secret_enc = cipher.encrypt(secret)
 
         uri = pyotp.totp.TOTP(secret).provisioning_uri(name=user.email, issuer_name="activia-trace")
-        import qrcode
-        import io
-        import base64 as b64
         qr = qrcode.make(uri)
         buf = io.BytesIO()
-        qr.save(buf, format="PNG")
-        qr_b64 = b64.b64encode(buf.getvalue()).decode()
+        qr.save(buf)
+        buf.seek(0)
+        qr_b64 = base64.b64encode(buf.getvalue()).decode()
         return {"otpauth_uri": uri, "qr_base64": qr_b64}
 
     @staticmethod
     def totp_confirm_enroll(session, tenant_id: uuid.UUID, user_id: uuid.UUID, code: str) -> bool:
-        from app.models.user import User
-        from sqlalchemy import select
-        stmt = select(User).where(User.id == user_id, User.tenant_id == tenant_id)
-        user = session.execute(stmt).scalar_one_or_none()
+        user = UserRepository.get_by_id(session, tenant_id, user_id)
         if not user or not user.totp_pending_secret_enc:
             raise AuthError("No pending TOTP enrollment")
 
