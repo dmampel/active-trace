@@ -16,6 +16,8 @@ from app.models.user import User
 from app.core.security import hash_password
 from app.services.auth_service import AuthService, AuthError
 from app.schemas.auth import TokenResponse, PartialTokenResponse
+from app.models.rbac import Rol, UserRol
+from app.core.security import decode_token
 
 
 @pytest.fixture(scope="module")
@@ -85,6 +87,23 @@ def test_login_success_no_2fa(session, tenant, active_user):
     assert result.access_token
     assert result.refresh_token
     assert result.token_type == "bearer"
+    
+    claims = decode_token(result.access_token)
+    assert "roles" in claims
+    assert claims["roles"] == []
+
+def test_login_includes_roles_in_jwt(session, tenant, active_user):
+    from datetime import date, timedelta
+    rol = Rol(nombre="ADMIN")
+    session.add(rol)
+    session.flush()
+    session.add(UserRol(user_id=active_user.id, rol_id=rol.id, tenant_id=tenant.id, desde=date.today() - timedelta(days=1)))
+    session.commit()
+
+    result = AuthService.login(session, tenant.id, "user@example.com", "correct_pass")
+    claims = decode_token(result.access_token)
+    assert "roles" in claims
+    assert "ADMIN" in claims["roles"]
 
 
 def test_login_wrong_password_raises(session, tenant, active_user):

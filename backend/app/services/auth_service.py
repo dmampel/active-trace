@@ -19,6 +19,7 @@ from app.core.security import (
     verify_password,
 )
 from app.repositories.user_repository import UserRepository
+from app.repositories.rbac_repository import RbacRepository
 from app.schemas.auth import PartialTokenResponse, TokenResponse
 
 
@@ -41,9 +42,9 @@ def _get_cipher() -> AES256Cipher:
     return AES256Cipher(key)
 
 
-def _build_token_response(session, user) -> TokenResponse:
+def _build_token_response(session, user, roles: list[str]) -> TokenResponse:
     access = create_access_token(
-        {"sub": str(user.id), "tenant_id": str(user.tenant_id), "roles": []},
+        {"sub": str(user.id), "tenant_id": str(user.tenant_id), "roles": roles},
         timedelta(minutes=_get_settings().access_token_expire_minutes),
     )
     raw_refresh = generate_opaque_token()
@@ -70,7 +71,8 @@ class AuthService:
                 partial_token=create_partial_token(str(user.id), str(user.tenant_id))
             )
 
-        return _build_token_response(session, user)
+        roles = RbacRepository.get_user_roles(session, user.id, user.tenant_id)
+        return _build_token_response(session, user, roles)
 
     @staticmethod
     def refresh(session, tenant_id: uuid.UUID, refresh_token_str: str) -> TokenResponse:
@@ -99,7 +101,7 @@ class AuthService:
             raise AuthError("User not found or inactive")
 
         access = create_access_token(
-            {"sub": str(user.id), "tenant_id": str(user.tenant_id), "roles": []},
+            {"sub": str(user.id), "tenant_id": str(user.tenant_id), "roles": RbacRepository.get_user_roles(session, user.id, user.tenant_id)},
             timedelta(minutes=_get_settings().access_token_expire_minutes),
         )
         raw_refresh = generate_opaque_token()
@@ -174,7 +176,8 @@ class AuthService:
         if not pyotp.TOTP(secret).verify(code):
             raise AuthError("Invalid TOTP code")
 
-        return _build_token_response(session, user)
+        roles = RbacRepository.get_user_roles(session, user.id, user.tenant_id)
+        return _build_token_response(session, user, roles)
 
     @staticmethod
     def forgot_password(session, tenant_id: uuid.UUID, email: str) -> str | None:
