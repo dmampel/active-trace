@@ -105,7 +105,7 @@ def totp_enroll(
 ):
     try:
         from app.schemas.auth import TOTPEnrollResponse
-        result = AuthService.totp_generate_secret(db, current_user.tenant_id, current_user.id)
+        result = AuthService.totp_enroll(db, current_user.tenant_id, current_user.id)
         db.commit()
         return result
     except AuthError as exc:
@@ -119,7 +119,7 @@ def totp_enroll_confirm(
     db: Session = Depends(get_sync_db),
 ):
     try:
-        AuthService.totp_confirm_enrollment(db, current_user.tenant_id, current_user.id, body.code)
+        AuthService.totp_confirm_enroll(db, current_user.tenant_id, current_user.id, body.code)
         db.commit()
         return {"message": "TOTP successfully enrolled"}
     except AuthError as exc:

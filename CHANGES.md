@@ -21,7 +21,7 @@
 ```
 [x] **C-01**: `foundation-setup` (infra, Docker, FastAPI skel, DB inicial, OTel)
 └── C-02 core-models-y-tenancy (Tenant, mixins, repo base con scope tenant, Alembic)
-    └── C-03 auth-jwt-2fa (login, refresh rotation, recuperación, sesión)
+    └── [x] C-03 auth-jwt-2fa (login, refresh rotation, recuperación, sesión)
         └── C-04 rbac-permisos-finos (roles, permisos modulo:accion, matriz, guard)
             ├── C-05 audit-log (E-AUD append-only, middleware, impersonación)
             ├── C-06 estructura-academica (Carrera, Cohorte, Materia, ABM)
@@ -165,8 +165,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/08_arquitectura_propuesta.md` §4 (multi-tenancy), §6 (persistencia, soft delete)
   - `docs/ARQUITECTURA.md` §6, §8 (tenant isolation, AES-256, ADR-002)
 
-### [C-03] `auth-jwt-2fa`
-- **Estado**: `[ ]` pendiente
+### [x] [C-03] `auth-jwt-2fa`
+- **Estado**: `[x]` completado
 - **Scope**:
   - `POST /api/auth/login` — email + password (Argon2id), JWT access 15min + refresh token con **rotación** (refresh usado se invalida). Claims mínimos: `user_id`, `tenant_id`, `roles`, `exp`.
   - `POST /api/auth/refresh` — rota refresh, emite nuevo par. `POST /api/auth/logout` — revoca sesión.
@@ -184,7 +184,6 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `docs/ARQUITECTURA.md` §5.1 (ADR-001 auth propio)
 
 ### [C-04] `rbac-permisos-finos`
-### [x] [C-04] `rbac-permisos-finos`
 - **Estado**: `[x]` completado
 - **Scope**:
   - Catálogo administrable: tablas `Rol`, `Permiso` (`modulo:accion`), matriz `RolPermiso` (datos, NO hardcode).

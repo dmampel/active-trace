@@ -112,7 +112,8 @@ def upgrade() -> None:
         "grilla_salarial:operar",
         "liquidaciones:gestionar",
         "facturas:gestionar",
-        "tenant:configurar"
+        "tenant:configurar",
+        "impersonacion:usar"
     ]
     permiso_data = []
     for p in permisos:
@@ -126,7 +127,7 @@ def upgrade() -> None:
         "PROFESOR": ["avisos:confirmar", "calificaciones:importar_propio", "atrasados:ver_propio", "entregas:detectar_propio", "comunicacion:enviar_propio", "encuentros:gestionar_propio", "guardias:registrar_propio", "tareas:gestionar_propio"],
         "COORDINADOR": ["avisos:confirmar", "calificaciones:importar", "atrasados:ver", "entregas:detectar", "comunicacion:enviar", "comunicacion:aprobar", "encuentros:gestionar", "guardias:registrar", "tareas:gestionar", "avisos:publicar", "equipos:gestionar", "auditoria:ver_propio"],
         "NEXO": [],
-        "ADMIN": ["avisos:confirmar", "calificaciones:importar", "atrasados:ver", "entregas:detectar", "comunicacion:enviar", "comunicacion:aprobar", "encuentros:gestionar", "guardias:registrar", "tareas:gestionar", "avisos:publicar", "equipos:gestionar", "estructura:gestionar", "usuarios:gestionar", "auditoria:ver", "tenant:configurar"],
+        "ADMIN": ["avisos:confirmar", "calificaciones:importar", "atrasados:ver", "entregas:detectar", "comunicacion:enviar", "comunicacion:aprobar", "encuentros:gestionar", "guardias:registrar", "tareas:gestionar", "avisos:publicar", "equipos:gestionar", "estructura:gestionar", "usuarios:gestionar", "auditoria:ver", "tenant:configurar", "impersonacion:usar"],
         "FINANZAS": ["avisos:confirmar", "auditoria:ver", "grilla_salarial:operar", "liquidaciones:gestionar", "facturas:gestionar"]
     }
     

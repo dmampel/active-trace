@@ -129,6 +129,27 @@ def test_login_inactive_user_raises(session, tenant):
         AuthService.login(session, tenant.id, "inactive@example.com", "pass")
 
 
+def test_refresh_token_contains_updated_roles(session, tenant, active_user):
+    from datetime import date
+    # Login sin roles — token inicial con roles vacíos
+    first = AuthService.login(session, tenant.id, "user@example.com", "correct_pass")
+    assert isinstance(first, TokenResponse)
+    assert decode_token(first.access_token)["roles"] == []
+    session.commit()
+
+    # Asignar rol COORDINADOR después del login
+    rol = Rol(nombre="COORDINADOR")
+    session.add(rol)
+    session.flush()
+    session.add(UserRol(user_id=active_user.id, rol_id=rol.id, tenant_id=tenant.id, desde=date.today()))
+    session.commit()
+
+    # Refresh debe re-resolver roles vigentes
+    second = AuthService.refresh(session, tenant.id, first.refresh_token)
+    assert isinstance(second, TokenResponse)
+    assert "COORDINADOR" in decode_token(second.access_token)["roles"]
+
+
 def test_login_with_2fa_returns_partial_token(session, tenant, totp_user):
     user, _ = totp_user
     result = AuthService.login(session, tenant.id, "totp@example.com", "correct_pass")
