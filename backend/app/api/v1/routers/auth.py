@@ -96,14 +96,34 @@ def reset_password(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
+from app.core.dependencies import get_sync_db, get_current_user, CurrentUser
+
 @router.post("/2fa/enroll")
-def totp_enroll():
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Requires get_current_user — available after C-04")
+def totp_enroll(
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_sync_db),
+):
+    try:
+        from app.schemas.auth import TOTPEnrollResponse
+        result = AuthService.totp_generate_secret(db, current_user.tenant_id, current_user.id)
+        db.commit()
+        return result
+    except AuthError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
-@router.post("/2fa/enroll/confirm")
-def totp_enroll_confirm():
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Requires get_current_user — available after C-04")
+@router.post("/2fa/enroll/confirm", status_code=status.HTTP_200_OK)
+def totp_enroll_confirm(
+    body: TOTPConfirmRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_sync_db),
+):
+    try:
+        AuthService.totp_confirm_enrollment(db, current_user.tenant_id, current_user.id, body.code)
+        db.commit()
+        return {"message": "TOTP successfully enrolled"}
+    except AuthError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
 @router.post("/2fa/confirm", response_model=TokenResponse)
