@@ -58,8 +58,10 @@ def _build_app() -> FastAPI:
 
     configure_telemetry(app, otlp_endpoint=settings.otlp_endpoint)
 
+    from app.api.v1.routers import me as me_router
     app.include_router(health_router.router)
     app.include_router(auth_router.router)
+    app.include_router(me_router.router)
 
     return app
 
