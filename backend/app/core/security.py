@@ -72,9 +72,10 @@ def generate_opaque_token() -> str:
     return secrets.token_urlsafe(32)
 
 
-# ── AES-256 (Fernet) ─────────────────────────────────────────────────────────
+# ── Cifrado simétrico (Fernet / AES-128-CBC + HMAC-SHA256) ───────────────────
+# Fernet usa AES-128, no AES-256. La arquitectura aspira a AES-256-GCM — pendiente de migración.
 
-class AES256Cipher:
+class FernetCipher:
     def __init__(self, key: bytes):
         self.fernet = Fernet(key)
 

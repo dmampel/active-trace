@@ -8,7 +8,7 @@ import qrcode
 
 from app.core.config import Settings
 from app.core.security import (
-    AES256Cipher,
+    FernetCipher,
     InvalidTokenError,
     create_access_token,
     create_partial_token,
@@ -37,9 +37,9 @@ def _get_settings() -> Settings:
     return _cached_settings
 
 
-def _get_cipher() -> AES256Cipher:
+def _get_cipher() -> FernetCipher:
     key = base64.urlsafe_b64encode(_get_settings().encryption_key[:32].encode())
-    return AES256Cipher(key)
+    return FernetCipher(key)
 
 
 def _build_token_response(session, user, roles: list[str]) -> TokenResponse:
@@ -146,7 +146,7 @@ class AuthService:
         secret = cipher.decrypt(user.totp_pending_secret_enc)
         totp = pyotp.TOTP(secret)
         if not totp.verify(code):
-            return False
+            raise AuthError("Invalid TOTP code")
 
         user.totp_secret_enc = user.totp_pending_secret_enc
         user.totp_pending_secret_enc = None

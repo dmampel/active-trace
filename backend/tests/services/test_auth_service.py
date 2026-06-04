@@ -60,10 +60,10 @@ def active_user(session, tenant):
 @pytest.fixture
 def totp_user(session, tenant):
     import pyotp
-    from app.core.security import AES256Cipher
+    from app.core.security import FernetCipher
     import base64
     key = base64.urlsafe_b64encode(b"b" * 32)
-    cipher = AES256Cipher(key)
+    cipher = FernetCipher(key)
     secret = pyotp.random_base32()
     u = User(
         tenant_id=tenant.id,

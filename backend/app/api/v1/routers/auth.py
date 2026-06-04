@@ -6,16 +6,17 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_sync_db
+from app.core.dependencies import CurrentUser, get_current_user, get_sync_db
 from app.schemas.auth import (
     ForgotPasswordRequest,
+    LoginRequest,
     LogoutRequest,
     PartialTokenResponse,
     RefreshRequest,
     ResetPasswordRequest,
     TOTPConfirmRequest,
+    TOTPEnrollResponse,
     TokenResponse,
-    LoginRequest,
 )
 from app.services.auth_service import AuthError, AuthService
 
@@ -47,7 +48,9 @@ def login(
 
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("20/minute")
 def refresh_token(
+    request: Request,
     body: RefreshRequest,
     tenant_id: uuid.UUID = Depends(_resolve_tenant),
     db: Session = Depends(get_sync_db),
@@ -83,7 +86,9 @@ def forgot_password(
 
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 def reset_password(
+    request: Request,
     body: ResetPasswordRequest,
     tenant_id: uuid.UUID = Depends(_resolve_tenant),
     db: Session = Depends(get_sync_db),
@@ -96,15 +101,12 @@ def reset_password(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 
-from app.core.dependencies import get_sync_db, get_current_user, CurrentUser
-
-@router.post("/2fa/enroll")
+@router.post("/2fa/enroll", response_model=TOTPEnrollResponse)
 def totp_enroll(
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_sync_db),
 ):
     try:
-        from app.schemas.auth import TOTPEnrollResponse
         result = AuthService.totp_enroll(db, current_user.tenant_id, current_user.id)
         db.commit()
         return result
@@ -127,7 +129,9 @@ def totp_enroll_confirm(
 
 
 @router.post("/2fa/confirm", response_model=TokenResponse)
+@limiter.limit("5/minute")
 def totp_confirm(
+    request: Request,
     body: TOTPConfirmRequest,
     tenant_id: uuid.UUID = Depends(_resolve_tenant),
     db: Session = Depends(get_sync_db),
