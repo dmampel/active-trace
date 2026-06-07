@@ -1,12 +1,15 @@
 import base64
+import hashlib
 import io
 import uuid
 from datetime import datetime, timedelta, timezone
+from functools import lru_cache
 
 import pyotp
 import qrcode
 
-from app.core.config import Settings
+from app.core.audit import IMPERSONACION_FINALIZAR, IMPERSONACION_INICIAR, record_audit_sync
+from app.core.config import get_settings
 from app.core.security import (
     FernetCipher,
     InvalidTokenError,
@@ -27,29 +30,21 @@ class AuthError(Exception):
     pass
 
 
-_cached_settings = None
-
-
-def _get_settings() -> Settings:
-    global _cached_settings  # noqa: PLW0603
-    if _cached_settings is None:
-        _cached_settings = Settings()
-    return _cached_settings
-
-
+@lru_cache(maxsize=1)
 def _get_cipher() -> FernetCipher:
-    key = base64.urlsafe_b64encode(_get_settings().encryption_key[:32].encode())
+    raw_key = hashlib.sha256(get_settings().encryption_key.encode()).digest()
+    key = base64.urlsafe_b64encode(raw_key)
     return FernetCipher(key)
 
 
 def _build_token_response(session, user, roles: list[str]) -> TokenResponse:
     access = create_access_token(
         {"sub": str(user.id), "tenant_id": str(user.tenant_id), "roles": roles},
-        timedelta(minutes=_get_settings().access_token_expire_minutes),
+        timedelta(minutes=get_settings().access_token_expire_minutes),
     )
     raw_refresh = generate_opaque_token()
     family_id = uuid.uuid4()
-    expires_at = datetime.now(timezone.utc) + timedelta(days=_get_settings().refresh_token_expire_days)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=get_settings().refresh_token_expire_days)
     UserRepository.create_refresh_token(
         session, user.id, user.tenant_id, hash_opaque_token(raw_refresh), family_id, expires_at
     )
@@ -87,7 +82,8 @@ class AuthService:
             UserRepository.revoke_refresh_family(session, rt.family_id)
             raise AuthError("Token reuse detected")
 
-        if rt.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        expires_at = rt.expires_at if rt.expires_at.tzinfo else rt.expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < datetime.now(timezone.utc):
             raise AuthError("Refresh token expired")
 
         if str(rt.tenant_id) != str(tenant_id):
@@ -102,10 +98,10 @@ class AuthService:
 
         access = create_access_token(
             {"sub": str(user.id), "tenant_id": str(user.tenant_id), "roles": RbacRepository.get_user_roles(session, user.id, user.tenant_id)},
-            timedelta(minutes=_get_settings().access_token_expire_minutes),
+            timedelta(minutes=get_settings().access_token_expire_minutes),
         )
         raw_refresh = generate_opaque_token()
-        expires_at = datetime.now(timezone.utc) + timedelta(days=_get_settings().refresh_token_expire_days)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=get_settings().refresh_token_expire_days)
         UserRepository.create_refresh_token(
             session, user.id, user.tenant_id, hash_opaque_token(raw_refresh), rt.family_id, expires_at
         )
@@ -191,6 +187,52 @@ class AuthService:
         return raw
 
     @staticmethod
+    def impersonate(
+        session,
+        current_user,
+        target_user_id: uuid.UUID,
+        request=None,
+    ) -> str:
+        if current_user.impersonado_id is not None:
+            raise AuthError("No se puede impersonar desde una sesión de impersonación activa")
+
+        target = UserRepository.get_by_id(session, current_user.tenant_id, target_user_id)
+        if not target or not target.is_active:
+            raise AuthError("Target user not found")
+
+        token = create_access_token(
+            {
+                "sub": str(current_user.id),
+                "tenant_id": str(current_user.tenant_id),
+                "roles": current_user.roles,
+                "impersonado_id": str(target.id),
+            },
+            timedelta(minutes=60),
+        )
+
+        record_audit_sync(
+            session,
+            current_user,
+            IMPERSONACION_INICIAR,
+            request=request,
+            detail={"target_user_id": str(target.id)},
+        )
+        return token
+
+    @staticmethod
+    def end_impersonation(session, current_user, request=None) -> None:
+        if current_user.impersonado_id is None:
+            raise AuthError("No hay sesión de impersonación activa")
+
+        record_audit_sync(
+            session,
+            current_user,
+            IMPERSONACION_FINALIZAR,
+            request=request,
+            detail={"target_user_id": str(current_user.impersonado_id)},
+        )
+
+    @staticmethod
     def reset_password(session, tenant_id: uuid.UUID, token_str: str, new_password: str) -> None:
         token_hash = hash_opaque_token(token_str)
         prt = UserRepository.get_reset_token_by_hash(session, token_hash)
@@ -198,7 +240,8 @@ class AuthService:
         if prt is None or prt.used_at is not None:
             raise AuthError("Invalid or already used reset token")
 
-        if prt.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        prt_expires_at = prt.expires_at if prt.expires_at.tzinfo else prt.expires_at.replace(tzinfo=timezone.utc)
+        if prt_expires_at < datetime.now(timezone.utc):
             raise AuthError("Reset token expired")
 
         if str(prt.tenant_id) != str(tenant_id):

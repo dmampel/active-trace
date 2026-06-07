@@ -6,7 +6,7 @@ from cryptography.fernet import Fernet
 from jose import JWTError, ExpiredSignatureError, jwt
 from passlib.context import CryptContext
 
-from app.core.config import Settings
+from app.core.config import get_settings
 
 
 class InvalidTokenError(Exception):
@@ -14,15 +14,6 @@ class InvalidTokenError(Exception):
 
 
 _pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
-
-_SETTINGS = None
-
-
-def _settings() -> Settings:
-    global _SETTINGS
-    if _SETTINGS is None:
-        _SETTINGS = Settings()
-    return _SETTINGS
 
 
 # ── Password hashing (Argon2id via passlib) ───────────────────────────────────
@@ -40,7 +31,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 def create_access_token(data: dict, expires_delta: timedelta) -> str:
     payload = data.copy()
     payload["exp"] = datetime.now(timezone.utc) + expires_delta
-    return jwt.encode(payload, _settings().secret_key, algorithm="HS256")
+    return jwt.encode(payload, get_settings().secret_key, algorithm="HS256")
 
 
 def create_partial_token(user_id: str, tenant_id: str) -> str:
@@ -50,12 +41,12 @@ def create_partial_token(user_id: str, tenant_id: str) -> str:
         "scope": "2fa_pending",
         "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
     }
-    return jwt.encode(payload, _settings().secret_key, algorithm="HS256")
+    return jwt.encode(payload, get_settings().secret_key, algorithm="HS256")
 
 
 def decode_token(token: str) -> dict:
     try:
-        return jwt.decode(token, _settings().secret_key, algorithms=["HS256"])
+        return jwt.decode(token, get_settings().secret_key, algorithms=["HS256"])
     except ExpiredSignatureError as exc:
         raise InvalidTokenError("Token expired") from exc
     except JWTError as exc:

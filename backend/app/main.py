@@ -15,10 +15,9 @@ from fastapi import FastAPI
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-from slowapi.util import get_remote_address
-from slowapi import Limiter
 
 from app.core.config import Settings
+from app.core.limiter import limiter
 from app.core.database import dispose_engine, init_engine
 from app.core.logging import configure_logging
 from app.core.observability import configure_telemetry
@@ -50,8 +49,7 @@ def _build_app() -> FastAPI:
         redoc_url="/redoc" if settings.environment != "production" else None,
     )
 
-    # Rate limiting (slowapi)
-    limiter = Limiter(key_func=get_remote_address)
+    # Rate limiting (slowapi) — instancia compartida con los routers
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     app.add_middleware(SlowAPIMiddleware)

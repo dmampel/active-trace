@@ -16,7 +16,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.config import Settings
+from app.core.config import get_settings
 from app.core.database import get_session_factory
 from app.core.security import InvalidTokenError, decode_token
 
@@ -31,12 +31,13 @@ class CurrentUser:
     id: uuid.UUID
     tenant_id: uuid.UUID
     roles: list[str]
+    impersonado_id: uuid.UUID | None = None
 
 
 def _get_sync_session_factory():
     global _sync_engine, _sync_session_factory  # noqa: PLW0603
     if _sync_session_factory is None:
-        settings = Settings()
+        settings = get_settings()
         sync_url = settings.database_url.replace("+asyncpg", "").replace("postgresql+asyncpg", "postgresql")
         _sync_engine = create_engine(sync_url)
         _sync_session_factory = sessionmaker(bind=_sync_engine, expire_on_commit=False)
@@ -81,10 +82,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         )
 
     try:
+        impersonado_raw = claims.get("impersonado_id")
+        impersonado_id = uuid.UUID(impersonado_raw) if impersonado_raw else None
         return CurrentUser(
             id=uuid.UUID(claims["sub"]),
             tenant_id=uuid.UUID(claims["tenant_id"]),
             roles=claims.get("roles", []),
+            impersonado_id=impersonado_id,
         )
     except (KeyError, ValueError) as exc:
         raise HTTPException(

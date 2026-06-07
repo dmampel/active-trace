@@ -7,7 +7,9 @@ Todos los valores sensibles (SECRET_KEY, ENCRYPTION_KEY) se validan en largo;
 nunca se loguean en texto claro.
 """
 
-from pydantic import Field, field_validator, model_validator
+from functools import lru_cache
+
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -74,9 +76,9 @@ class Settings(BaseSettings):
     @field_validator("secret_key")
     @classmethod
     def secret_key_must_be_long_enough(cls, v: str) -> str:
-        if len(v) < 32:
+        if len(v) < 64:
             raise ValueError(
-                "SECRET_KEY debe tener al menos 32 caracteres. "
+                "SECRET_KEY debe tener al menos 64 caracteres. "
                 "Generá uno con: python -c \"import secrets; print(secrets.token_hex(32))\""
             )
         return v
@@ -107,3 +109,8 @@ class Settings(BaseSettings):
             f"database_url=<redacted>, "
             f"access_token_expire_minutes={self.access_token_expire_minutes})"
         )
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()

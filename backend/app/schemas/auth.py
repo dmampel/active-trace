@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
@@ -58,7 +60,7 @@ class TOTPEnrollResponse(BaseModel):
 class TOTPConfirmRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    partial_token: str
+    partial_token: str = Field(min_length=1)
     code: str = Field(min_length=6, max_length=6)
 
 
@@ -66,3 +68,16 @@ class TOTPVerifyEnrollRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     code: str = Field(min_length=6, max_length=6)
+
+
+class ImpersonateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    target_user_id: uuid.UUID
+
+
+class ImpersonateResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    impersonate_token: str
+    token_type: str = "bearer"

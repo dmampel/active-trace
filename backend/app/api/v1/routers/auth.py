@@ -2,13 +2,15 @@ import uuid
 from typing import Union
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import CurrentUser, get_current_user, get_sync_db
+from app.core.limiter import limiter
+from app.core.permissions import require_permission
 from app.schemas.auth import (
     ForgotPasswordRequest,
+    ImpersonateRequest,
+    ImpersonateResponse,
     LoginRequest,
     LogoutRequest,
     PartialTokenResponse,
@@ -16,12 +18,12 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     TOTPConfirmRequest,
     TOTPEnrollResponse,
+    TOTPVerifyEnrollRequest,
     TokenResponse,
 )
 from app.services.auth_service import AuthError, AuthService
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
-limiter = Limiter(key_func=get_remote_address)
 
 
 def _resolve_tenant(x_tenant_id: str = Header(..., alias="X-Tenant-ID")) -> uuid.UUID:
@@ -115,8 +117,10 @@ def totp_enroll(
 
 
 @router.post("/2fa/enroll/confirm", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 def totp_enroll_confirm(
-    body: TOTPConfirmRequest,
+    request: Request,  # noqa: ARG001 — required by slowapi
+    body: TOTPVerifyEnrollRequest,
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_sync_db),
 ):
@@ -142,3 +146,36 @@ def totp_confirm(
         return result
     except AuthError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid TOTP code or token")
+
+
+@router.post("/impersonate", response_model=ImpersonateResponse)
+def impersonate(
+    request: Request,
+    body: ImpersonateRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+    _: bool = Depends(require_permission("impersonacion:usar")),
+    db: Session = Depends(get_sync_db),
+):
+    try:
+        token = AuthService.impersonate(db, current_user, body.target_user_id, request=request)
+        db.commit()
+        return ImpersonateResponse(impersonate_token=token)
+    except AuthError as exc:
+        detail = str(exc)
+        if "not found" in detail.lower():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+
+@router.post("/impersonate/end", status_code=status.HTTP_200_OK)
+def end_impersonation(
+    request: Request,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_sync_db),
+):
+    try:
+        AuthService.end_impersonation(db, current_user, request=request)
+        db.commit()
+        return {"message": "Impersonation session ended"}
+    except AuthError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
