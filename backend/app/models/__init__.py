@@ -3,6 +3,7 @@ from app.models.tenant import Tenant
 from app.models.user import User, RefreshToken, PasswordResetToken
 from app.models.rbac import Rol, Permiso, RolPermiso, UserRol
 from app.models.audit_log import AuditLog
+from app.models.estructura import Carrera, Cohorte, EstadoEntidad, InstanciaDictado, Materia
 
 __all__ = [
     "Base",
@@ -19,4 +20,9 @@ __all__ = [
     "RolPermiso",
     "UserRol",
     "AuditLog",
+    "Carrera",
+    "Cohorte",
+    "EstadoEntidad",
+    "InstanciaDictado",
+    "Materia",
 ]

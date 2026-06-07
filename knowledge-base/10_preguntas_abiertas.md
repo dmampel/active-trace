@@ -6,35 +6,21 @@
 
 ## Prioridad ALTA — bloqueantes para el modelo de dominio
 
-### PA-01 — ¿Cómo se organiza el catálogo de materias y cuál es la fuente de verdad?
+~~### PA-01 — ¿Cómo se organiza el catálogo de materias y cuál es la fuente de verdad?~~ **CERRADA**
 
-El sistema parece operar con (al menos) dos agrupaciones distintas de materias:
+**Resolución** (2026-06-07): el sistema usa **dos entidades separadas**:
+- `Materia` — catálogo del plan de estudios (código corto, ej.: `PROG_I`). Fuente de verdad curricular.
+- `InstanciaDictado` — oferta concreta de una materia en una cohorte y período (ej.: "Programación – Python" en MAR-2026). Las calificaciones, padrón y encuentros se asocian a la instancia, no a la materia directamente.
 
-- Una lista con códigos cortos del tipo `PROG_I`, `AYSO`, etc., ligada a la estructura de carreras y cohortes.
-- Otra lista con nombres descriptivos del tipo "Programación – Python", "Programación – Java", orientada al seguimiento de actividades de aprendizaje.
-
-**Preguntas abiertas**:
-
-- ¿Son dos catálogos independientes (uno por carrera/plan y otro por instancia de dictado) o es una sola entidad con distintas vistas?
-- ¿Existe una relación formal entre ambas agrupaciones? Si un alumno tiene una calificación en "Programación – Python", ¿a qué materia del plan corresponde?
-- ¿Cuál de las dos representa la materia a efectos del plan de estudios y cuál representa la instancia de cursado?
-- ¿Las calificaciones viajan entre una y otra, o cada una tiene su propio registro?
-
-**Impacto**: define si el modelo de datos necesita una entidad `Materia` (del plan) y una entidad separada `InstanciaDictado` (o `Comisión` extendida), o si alcanza con una sola.
+Documentado en [04_modelo_de_datos.md](04_modelo_de_datos.md) E3 y E3b.
 
 ---
 
-### PA-07 — ¿Las cohortes pertenecen a una carrera o son transversales?
+~~### PA-07 — ¿Las cohortes pertenecen a una carrera o son transversales?~~ **CERRADA**
 
-Las cohortes (ej.: "MAR-2026") pueden pertenecer a una carrera específica o ser compartidas entre varias.
+**Resolución** (2026-06-07): una cohorte pertenece a **exactamente una carrera** (`Cohorte.carrera_id` NOT NULL). No hay cohortes transversales. Un alumno puede estar en distintas cohortes si cursa materias de carreras diferentes.
 
-**Preguntas abiertas**:
-
-- ¿Una cohorte es exclusiva de un programa académico?
-- ¿Puede un alumno estar en la misma cohorte con materias de distintas carreras?
-- ¿La cohorte define el ciclo lectivo o también el plan de estudios vigente?
-
-**Impacto**: afecta la cardinalidad entre `Cohorte`, `Carrera` y `Alumno` en el modelo de datos ([04_modelo_de_datos.md](04_modelo_de_datos.md)).
+Documentado en [04_modelo_de_datos.md](04_modelo_de_datos.md) E2.
 
 ---
 

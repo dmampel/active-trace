@@ -20,11 +20,11 @@
 
 ```
 [x] **C-01**: `foundation-setup` (infra, Docker, FastAPI skel, DB inicial, OTel)
-└── C-02 core-models-y-tenancy (Tenant, mixins, repo base con scope tenant, Alembic)
+└── [x] C-02 core-models-y-tenancy (Tenant, mixins, repo base con scope tenant, Alembic)
     └── [x] C-03 auth-jwt-2fa (login, refresh rotation, recuperación, sesión)
-        └── C-04 rbac-permisos-finos (roles, permisos modulo:accion, matriz, guard)
-            ├── C-05 audit-log (E-AUD append-only, middleware, impersonación)
-            ├── C-06 estructura-academica (Carrera, Cohorte, Materia, ABM)
+        └── [x] C-04 rbac-permisos-finos (roles, permisos modulo:accion, matriz, guard)
+            ├── [x] C-05 audit-log (E-AUD append-only, middleware, impersonación)
+            ├── [x] C-06 estructura-academica (Carrera, Cohorte, Materia, ABM)
             │   ├── C-07 usuarios-y-asignaciones (Usuario PII cifrada, Asignacion, vigencia)
             │   │   ├── C-08 equipos-docentes (mis-equipos, masiva, clonar, exportar)
             │   │   ├── C-09 padron-ingesta-moodle (VersionPadron, import xlsx/csv, Moodle WS)
@@ -199,7 +199,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/08_arquitectura_propuesta.md` §3.2 (RBAC permisos finos)
 
 ### [C-05] `audit-log`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completo — 2026-06-07
 - **Scope**:
   - Modelo `AuditLog` (E-AUD) **append-only**: sin update ni delete a nivel app y DB. Campos: actor, impersonado, materia, accion, detalle JSON, filas_afectadas, ip, user_agent, fecha_hora.
   - Helper/decorator de auditoría para registrar acciones significativas con código estandarizado (`CALIFICACIONES_IMPORTAR`, `PADRON_CARGAR`, etc.).
@@ -217,18 +217,18 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 
 ## FASE 2 — Entidades Raíz del Dominio Académico
 
-### [C-06] `estructura-academica`
-- **Estado**: `[ ]` pendiente
+### [C-06] `estructura-academica` ✅
+- **Estado**: `[x]` completo — archivado 2026-06-07
 - **Scope**:
-  - Modelos: `Carrera`, `Cohorte`, `Materia` (catálogo único por tenant — ADR-006).
-  - ABM `/api/admin/carreras`, `/api/admin/cohortes`, `/api/admin/materias` con guard `estructura:gestionar` (ADMIN).
-  - Reglas: unicidad `(tenant_id, codigo)` en Carrera/Materia; `(tenant_id, carrera_id, nombre)` en Cohorte; carrera inactiva no admite cohortes abiertas.
-  - `Migración 004: carrera, cohorte, materia`.
-  - Tests: CRUD, unicidad por tenant, aislamiento multi-tenant, estado activa/inactiva.
-- **Dependencias**: `C-04`
+  - Modelos: `Carrera`, `Cohorte`, `Materia`, `InstanciaDictado` (dos niveles de materia — PA-01 cerrada).
+  - ABM `/api/v1/estructura/carreras|cohortes|materias|instancias` con permisos granulares `estructura:leer|crear|editar|eliminar`.
+  - Reglas: unicidad `(tenant_id, codigo)` en Carrera/Materia; `(tenant_id, carrera_id, nombre)` en Cohorte; `(tenant_id, materia_id, cohorte_id, periodo)` en InstanciaDictado; cohorte pertenece a una sola carrera (PA-07 cerrada).
+  - `Migración 005: carrera, cohorte, materia, instancia_dictado` + permisos granulares en rol_permiso.
+  - Tests: 21 tests (modelos, repos, endpoints), 117 tests totales GREEN.
+- **Dependencias**: `C-04`, `C-05`
 - **Governance**: MEDIO
 - **Leer antes**:
-  - `knowledge-base/04_modelo_de_datos.md` §E1 Carrera, §E2 Cohorte, §E3 Materia
+  - `knowledge-base/04_modelo_de_datos.md` §E1–E3b (Carrera, Cohorte, Materia, InstanciaDictado)
   - `knowledge-base/06_funcionalidades.md` Épica 5 (F5.1, F5.2)
   - `docs/ARQUITECTURA.md` §10 (ADR-006 Materia + Dictado)
 

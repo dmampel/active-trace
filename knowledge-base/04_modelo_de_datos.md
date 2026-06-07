@@ -9,7 +9,7 @@
 1. **Tenant como raíz**: toda entidad del sistema lleva `tenant_id`. Los repositorios filtran por tenant por defecto; ninguna consulta puede cruzar datos entre instituciones ([03 — Actores y Roles](03_actores_y_roles.md) §1).
 2. **Identidad de usuario = UUID interno**: el sistema identifica a cada usuario con un identificador interno opaco (UUID). El número de legajo, si existe, es un **atributo de negocio opcional**, no una clave de identidad ni credencial de acceso.
 3. **Padrón versionado**: la carga de un nuevo padrón no destruye el anterior; se registra como una versión nueva con marca temporal, conservando el historial completo.
-4. **Catálogo único de materias por tenant**: una sola fuente de verdad para las materias; no existen catálogos paralelos ni duplicados.
+4. **Dos niveles de materia**: `Materia` es el catálogo curricular del tenant (plan de estudios); `InstanciaDictado` es la oferta concreta de una materia en una cohorte y período. Las calificaciones, padrón y encuentros se asocian a la instancia, no a la materia directamente.
 5. **Datos sensibles cifrados en reposo**: los atributos marcados con `[cifrado]` deben almacenarse cifrados (el algoritmo concreto vive en [`docs/ARQUITECTURA.md`](../docs/ARQUITECTURA.md)).
 6. **Auditoría obligatoria**: toda acción significativa genera un registro en el log de auditoría (E-AUD).
 
@@ -75,7 +75,29 @@ Materia {
 
 **Reglas**:
 - El par `(tenant_id, codigo)` es único.
-- Una misma materia puede pertenecer a distintas carreras y cohortes a través de la entidad Asignación (E5).
+- Una misma materia puede dictarse en distintas cohortes a través de `InstanciaDictado` (E3b).
+
+---
+
+### E3b — InstanciaDictado
+
+Oferta concreta de una materia en una cohorte y período académico. Es la unidad operativa: padrón, calificaciones y encuentros se asocian a la instancia, no a la materia del plan.
+
+```
+InstanciaDictado {
+  id          : UUID       — clave interna
+  tenant_id   : UUID       — FK → Tenant
+  materia_id  : UUID       — FK → Materia (qué materia del plan)
+  cohorte_id  : UUID       — FK → Cohorte (en qué cohorte se dicta)
+  nombre      : texto      — nombre descriptivo (ej: "Programación – Python")
+  periodo     : texto      — cuatrimestre/año (ej: "2026-1")
+  estado      : enum       — Activa | Inactiva
+}
+```
+
+**Reglas**:
+- El par `(tenant_id, materia_id, cohorte_id, periodo)` es único.
+- Una instancia inactiva no admite nuevas calificaciones ni entradas de padrón.
 
 ---
 
@@ -569,29 +591,32 @@ AuditLog {
 Tenant (1) ─── (N) Carrera
 Tenant (1) ─── (N) Cohorte
 Tenant (1) ─── (N) Materia
+Tenant (1) ─── (N) InstanciaDictado
 Tenant (1) ─── (N) Usuario
 
 Carrera (1) ─── (N) Cohorte
 Carrera (1) ─── (N) Asignacion
 
+Cohorte (1) ─── (N) InstanciaDictado
 Cohorte (1) ─── (N) Asignacion
-Cohorte (1) ─── (N) VersionPadron
 Cohorte (1) ─── (N) Evaluacion
 Cohorte (1) ─── (N) FechaAcademica
 Cohorte (1) ─── (N) Liquidacion
 
+Materia (1) ─── (N) InstanciaDictado
 Materia (1) ─── (N) Asignacion
-Materia (1) ─── (N) VersionPadron
-Materia (1) ─── (N) Calificacion
-Materia (1) ─── (N) UmbralMateria
-Materia (1) ─── (N) SlotEncuentro
-Materia (1) ─── (N) Guardia
-Materia (1) ─── (N) Tarea
-Materia (1) ─── (N) Aviso
-Materia (1) ─── (N) Evaluacion
-Materia (1) ─── (N) FechaAcademica
 Materia (1) ─── (N) ProgramaMateria
-Materia (1) ─── (N) Comunicacion
+
+InstanciaDictado (1) ─── (N) VersionPadron
+InstanciaDictado (1) ─── (N) Calificacion
+InstanciaDictado (1) ─── (N) UmbralMateria
+InstanciaDictado (1) ─── (N) SlotEncuentro
+InstanciaDictado (1) ─── (N) Guardia
+InstanciaDictado (1) ─── (N) Tarea
+InstanciaDictado (1) ─── (N) Aviso
+InstanciaDictado (1) ─── (N) Evaluacion
+InstanciaDictado (1) ─── (N) FechaAcademica
+InstanciaDictado (1) ─── (N) Comunicacion
 
 Usuario (1) ─── (N) Asignacion
 Usuario (1) ─── (N) UmbralMateria
