@@ -1,29 +1,48 @@
 import pytest
-from cryptography.fernet import InvalidToken
-from app.core.security import FernetCipher
+from app.core.security import AES256GCMCipher
 
-def test_aes_cipher_encrypt_decrypt():
-    # Valid 32-byte url-safe base64 encoded key
-    key = b"V6wT1Z_mPZ6BqN0hR5wzZ1xR_j5K6_W7mPZ6BqN0hR4="
-    cipher = FernetCipher(key)
-    
-    plaintext = "this is a secret DNI"
-    encrypted = cipher.encrypt(plaintext)
-    
-    assert encrypted != plaintext
+
+def test_aes256gcm_roundtrip():
+    key = b"b" * 32
+    cipher = AES256GCMCipher(key)
+    plaintext = "super-secret DNI: 12345678"
+    assert cipher.decrypt(cipher.encrypt(plaintext)) == plaintext
+
+
+def test_aes256gcm_ciphertext_differs_from_plaintext():
+    key = b"b" * 32
+    cipher = AES256GCMCipher(key)
+    encrypted = cipher.encrypt("some value")
+    assert encrypted != "some value"
     assert isinstance(encrypted, str)
-    
-    decrypted = cipher.decrypt(encrypted)
-    assert decrypted == plaintext
 
-def test_aes_cipher_invalid_key_raises_error():
-    # Invalid key
-    with pytest.raises(ValueError):
-        FernetCipher(b"invalid_key_length")
 
-def test_aes_cipher_decrypt_invalid_token():
-    key = b"V6wT1Z_mPZ6BqN0hR5wzZ1xR_j5K6_W7mPZ6BqN0hR4="
-    cipher = FernetCipher(key)
-    
-    with pytest.raises(InvalidToken):
-        cipher.decrypt("invalid-encrypted-string")
+def test_aes256gcm_nonce_randomness():
+    key = b"b" * 32
+    cipher = AES256GCMCipher(key)
+    ct1 = cipher.encrypt("same plaintext")
+    ct2 = cipher.encrypt("same plaintext")
+    assert ct1 != ct2  # nonces differ
+
+
+def test_aes256gcm_tamper_detection():
+    key = b"b" * 32
+    cipher = AES256GCMCipher(key)
+    encrypted = cipher.encrypt("secret")
+    # Tamper with the ciphertext
+    import base64
+    raw = base64.urlsafe_b64decode(encrypted + "==")
+    tampered = raw[:-1] + bytes([raw[-1] ^ 0xFF])
+    bad = base64.urlsafe_b64encode(tampered).rstrip(b"=").decode()
+    with pytest.raises(Exception):
+        cipher.decrypt(bad)
+
+
+def test_aes256gcm_wrong_key_raises():
+    key_a = b"a" * 32
+    key_b = b"b" * 32
+    cipher_a = AES256GCMCipher(key_a)
+    cipher_b = AES256GCMCipher(key_b)
+    encrypted = cipher_a.encrypt("secret value")
+    with pytest.raises(Exception):
+        cipher_b.decrypt(encrypted)

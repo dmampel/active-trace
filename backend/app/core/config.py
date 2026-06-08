@@ -58,6 +58,11 @@ class Settings(BaseSettings):
         ge=1,
         description="Duración del refresh token en días. Default: 30.",
     )
+    impersonation_token_expire_minutes: int = Field(
+        default=60,
+        ge=1,
+        description="Duración del token de impersonación en minutos. Default: 60.",
+    )
 
     # ── Entorno ───────────────────────────────────────────────────────────────
     environment: str = Field(

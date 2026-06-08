@@ -1,0 +1,26 @@
+FROM python:3.13-slim AS builder
+
+RUN pip install --no-cache-dir uv==0.5.26
+
+WORKDIR /app
+
+COPY pyproject.toml ./
+
+# Instala deps de producción + dev (pytest, httpx, etc.)
+RUN uv venv .venv && \
+    uv pip install --python .venv/bin/python -e ".[dev]" --no-cache
+
+FROM python:3.13-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/.venv .venv
+COPY app/ app/
+COPY tests/ tests/
+COPY pyproject.toml ./
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+CMD ["python", "-m", "pytest", "--tb=short", "-q"]

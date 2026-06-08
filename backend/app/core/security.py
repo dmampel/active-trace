@@ -1,8 +1,10 @@
+import base64
 import hashlib
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from jose import JWTError, ExpiredSignatureError, jwt
 from passlib.context import CryptContext
 
@@ -63,15 +65,23 @@ def generate_opaque_token() -> str:
     return secrets.token_urlsafe(32)
 
 
-# ── Cifrado simétrico (Fernet / AES-128-CBC + HMAC-SHA256) ───────────────────
-# Fernet usa AES-128, no AES-256. La arquitectura aspira a AES-256-GCM — pendiente de migración.
+# ── Cifrado simétrico AES-256-GCM ─────────────────────────────────────────────
+# Formato almacenado: base64url( nonce[12] + ciphertext+tag )
+# AESGCM requiere clave de exactamente 32 bytes.
 
-class FernetCipher:
+class AES256GCMCipher:
     def __init__(self, key: bytes):
-        self.fernet = Fernet(key)
+        if len(key) != 32:
+            raise ValueError("AES-256 key must be exactly 32 bytes")
+        self._aesgcm = AESGCM(key)
 
     def encrypt(self, plaintext: str) -> str:
-        return self.fernet.encrypt(plaintext.encode()).decode()
+        nonce = os.urandom(12)
+        ct = self._aesgcm.encrypt(nonce, plaintext.encode(), None)
+        return base64.urlsafe_b64encode(nonce + ct).rstrip(b"=").decode()
 
     def decrypt(self, ciphertext: str) -> str:
-        return self.fernet.decrypt(ciphertext.encode()).decode()
+        padding = "=" * (-len(ciphertext) % 4)
+        raw = base64.urlsafe_b64decode(ciphertext + padding)
+        nonce, ct = raw[:12], raw[12:]
+        return self._aesgcm.decrypt(nonce, ct, None).decode()

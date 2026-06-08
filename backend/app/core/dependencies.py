@@ -1,27 +1,20 @@
 """Dependency injection de FastAPI.
 
 - get_db: sesión async por request (asyncpg)
-- get_sync_db: sesión sync por request (psycopg2) — usada por el router de auth
-- get_current_user: resuelve identidad + tenant desde JWT verificado (C-03)
-- require_permission: guard RBAC modulo:accion — RESERVADO para C-04
+- get_current_user: resuelve identidad + tenant desde JWT verificado
+- require_permission: guard RBAC modulo:accion (en permissions.py)
 """
 
 import uuid
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.config import get_settings
 from app.core.database import get_session_factory
 from app.core.security import InvalidTokenError, decode_token
-
-_sync_engine = None
-_sync_session_factory = None
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=True)
 
@@ -32,22 +25,6 @@ class CurrentUser:
     tenant_id: uuid.UUID
     roles: list[str]
     impersonado_id: uuid.UUID | None = None
-
-
-def _get_sync_session_factory():
-    global _sync_engine, _sync_session_factory  # noqa: PLW0603
-    if _sync_session_factory is None:
-        settings = get_settings()
-        sync_url = settings.database_url.replace("+asyncpg", "").replace("postgresql+asyncpg", "postgresql")
-        _sync_engine = create_engine(sync_url)
-        _sync_session_factory = sessionmaker(bind=_sync_engine, expire_on_commit=False)
-    return _sync_session_factory
-
-
-def get_sync_db() -> Generator[Session, None, None]:
-    factory = _get_sync_session_factory()
-    with factory() as session:
-        yield session
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -96,7 +73,3 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
             detail="Invalid token claims",
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
-
-
-# ── RESERVADO → C-04 (rbac-permisos-finos) ───────────────────────────────────
-# Implementado en app/core/permissions.py

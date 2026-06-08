@@ -70,5 +70,4 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         else:
             await self.session.delete(item)
 
-        await self.session.commit()
         return True

@@ -10,8 +10,6 @@ Variables de entorno requeridas para tests de DB:
     TEST_DATABASE_URL=postgresql+asyncpg://user:pass@host/db_test
 """
 
-from unittest.mock import AsyncMock, patch
-
 import os
 
 import pytest
@@ -55,7 +53,27 @@ async def test_engine(test_settings: Settings):
 
 
 @pytest_asyncio.fixture(scope="session")
-async def test_session_factory(test_engine):
+async def create_tables(test_engine):
+    """Crea todas las tablas en la DB de test al inicio de la sesión.
+
+    No se usa autouse — solo se activa cuando db_session o app_client la requieren.
+    Eso evita que tests con TestClient (que no usan PG real) fallen por DB inexistente.
+    """
+    from app.models.base import Base
+    import app.models.tenant  # noqa: F401
+    import app.models.user  # noqa: F401
+    import app.models.rbac  # noqa: F401
+    import app.models.audit_log  # noqa: F401
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest_asyncio.fixture(scope="session")
+async def test_session_factory(test_engine, create_tables):
     """Factory de sesiones async para tests."""
     factory = async_sessionmaker(
         test_engine,

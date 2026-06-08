@@ -1,152 +1,100 @@
-"""Tests para endpoints de impersonación y get_current_user con impersonado_id."""
+"""Tests para endpoints de impersonación."""
 import uuid
-import pytest
 from datetime import timedelta, date
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-from fastapi.testclient import TestClient
-import os
 
-os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5433/test")
-os.environ.setdefault("TEST_DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5433/test")
-os.environ.setdefault("SECRET_KEY", "a" * 64)
-os.environ.setdefault("ENCRYPTION_KEY", "b" * 64)
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.main import app
-from app.models.base import Base
+from app.models.audit_log import AuditLog
+from app.models.rbac import Permiso, Rol, RolPermiso, UserRol
 from app.models.tenant import Tenant
 from app.models.user import User
-from app.models.audit_log import AuditLog
-from app.models.rbac import Rol, Permiso, RolPermiso, UserRol
-from app.core.dependencies import get_sync_db, CurrentUser
+from app.core.dependencies import CurrentUser
 from app.core.security import create_access_token, hash_password, decode_token
 
 
-# ── Fixtures ─────────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-@pytest.fixture
-def engine():
-    eng = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
-    Base.metadata.create_all(eng)
-    yield eng
-    Base.metadata.drop_all(eng)
-
-
-@pytest.fixture
-def db(engine):
-    with Session(engine) as session:
-        yield session
-
-
-@pytest.fixture
-def tenant_a(db):
-    t = Tenant(id=uuid.uuid4(), name="Tenant A")
+async def _create_tenant(db: AsyncSession, name: str = None) -> Tenant:
+    t = Tenant(name=name or f"T-{uuid.uuid4().hex[:6]}")
     db.add(t)
-    db.flush()
+    await db.commit()
+    await db.refresh(t)
     return t
 
 
-@pytest.fixture
-def tenant_b(db):
-    t = Tenant(id=uuid.uuid4(), name="Tenant B")
-    db.add(t)
-    db.flush()
-    return t
-
-
-def _create_user(db, tenant_id, email="user@test.com"):
+async def _create_user(db: AsyncSession, tenant_id: uuid.UUID, email: str = None) -> User:
     u = User(
         id=uuid.uuid4(),
         tenant_id=tenant_id,
-        email=email,
+        email=email or f"u-{uuid.uuid4().hex[:6]}@test.com",
         password_hash=hash_password("secret123"),
         is_active=True,
     )
     db.add(u)
-    db.flush()
+    await db.commit()
+    await db.refresh(u)
     return u
 
 
-def _grant_permission(db, user_id, tenant_id, perm_name="impersonacion:usar"):
-    rol = Rol(id=uuid.uuid4(), nombre="admin_rol")
-    perm = Permiso(id=uuid.uuid4(), nombre=perm_name)
-    rol_perm = RolPermiso(rol_id=rol.id, permiso_id=perm.id)
-    user_rol = UserRol(
-        user_id=user_id,
-        rol_id=rol.id,
-        tenant_id=tenant_id,
-        desde=date.today(),
-    )
-    db.add_all([rol, perm, rol_perm, user_rol])
-    db.flush()
+async def _grant_permission(db: AsyncSession, user_id: uuid.UUID, tenant_id: uuid.UUID, perm_name: str = "impersonacion:usar"):
+    from sqlalchemy import select as sa_select
+    result = await db.execute(sa_select(Permiso).where(Permiso.nombre == perm_name))
+    perm = result.scalar_one_or_none()
+    if perm is None:
+        perm = Permiso(id=uuid.uuid4(), nombre=perm_name)
+        db.add(perm)
+        await db.flush()
+
+    rol = Rol(id=uuid.uuid4(), nombre=f"rol-{uuid.uuid4().hex[:4]}")
+    db.add(rol)
+    await db.flush()
+
+    db.add_all([RolPermiso(rol_id=rol.id, permiso_id=perm.id), UserRol(user_id=user_id, rol_id=rol.id, tenant_id=tenant_id, desde=date.today())])
+    await db.commit()
 
 
-def _token_for(user, extra_claims=None):
-    claims = {
-        "sub": str(user.id),
-        "tenant_id": str(user.tenant_id),
-        "roles": [],
-    }
+def _token_for(user: User, extra_claims: dict = None) -> str:
+    claims = {"sub": str(user.id), "tenant_id": str(user.tenant_id), "roles": []}
     if extra_claims:
         claims.update(extra_claims)
     return create_access_token(claims, timedelta(minutes=15))
 
 
-def _client_with_db(db):
-    app.dependency_overrides[get_sync_db] = lambda: db
-    return TestClient(app, raise_server_exceptions=False)
+# ── get_current_user — impersonado_id (no DB needed) ─────────────────────────
 
-
-# ── get_current_user — impersonado_id ────────────────────────────────────────
-
-def test_get_current_user_with_impersonado_id(db, tenant_a):
-    """9.7 — JWT con impersonado_id → CurrentUser.impersonado_id poblado."""
-    actor = _create_user(db, tenant_a.id, "actor@test.com")
+def test_get_current_user_with_impersonado_id():
     target_id = uuid.uuid4()
-
-    token = _token_for(actor, {"impersonado_id": str(target_id)})
-    claims = decode_token(token)
-
-    impersonado_raw = claims.get("impersonado_id")
-    impersonado = uuid.UUID(impersonado_raw) if impersonado_raw else None
-
-    cu = CurrentUser(
-        id=uuid.UUID(claims["sub"]),
-        tenant_id=uuid.UUID(claims["tenant_id"]),
-        roles=[],
-        impersonado_id=impersonado,
+    user_id = uuid.uuid4()
+    tenant_id = uuid.uuid4()
+    token = create_access_token(
+        {"sub": str(user_id), "tenant_id": str(tenant_id), "roles": [], "impersonado_id": str(target_id)},
+        timedelta(minutes=15),
     )
+    claims = decode_token(token)
+    impersonado = uuid.UUID(claims["impersonado_id"])
+    cu = CurrentUser(id=uuid.UUID(claims["sub"]), tenant_id=uuid.UUID(claims["tenant_id"]), roles=[], impersonado_id=impersonado)
     assert cu.impersonado_id == target_id
 
 
-def test_get_current_user_without_impersonado_id(db, tenant_a):
-    """9.8 — JWT normal → CurrentUser.impersonado_id = None."""
-    actor = _create_user(db, tenant_a.id, "actor2@test.com")
-    token = _token_for(actor)
+def test_get_current_user_without_impersonado_id():
+    user_id = uuid.uuid4()
+    tenant_id = uuid.uuid4()
+    token = create_access_token({"sub": str(user_id), "tenant_id": str(tenant_id), "roles": []}, timedelta(minutes=15))
     claims = decode_token(token)
-
-    impersonado_raw = claims.get("impersonado_id")
-    impersonado = uuid.UUID(impersonado_raw) if impersonado_raw else None
-
-    cu = CurrentUser(
-        id=uuid.UUID(claims["sub"]),
-        tenant_id=uuid.UUID(claims["tenant_id"]),
-        roles=[],
-        impersonado_id=impersonado,
-    )
+    cu = CurrentUser(id=uuid.UUID(claims["sub"]), tenant_id=uuid.UUID(claims["tenant_id"]), roles=[], impersonado_id=None)
     assert cu.impersonado_id is None
 
 
 # ── POST /impersonate ─────────────────────────────────────────────────────────
 
-def test_impersonate_without_permission_returns_403(db, tenant_a):
-    """9.1 — usuario sin permiso impersonacion:usar → 403."""
-    actor = _create_user(db, tenant_a.id, "actor3@test.com")
-    target = _create_user(db, tenant_a.id, "target@test.com")
+async def test_impersonate_without_permission_returns_403(app_client, db_session: AsyncSession):
+    tenant = await _create_tenant(db_session)
+    actor = await _create_user(db_session, tenant.id)
+    target = await _create_user(db_session, tenant.id)
     token = _token_for(actor)
 
-    client = _client_with_db(db)
-    resp = client.post(
+    resp = await app_client.post(
         "/api/v1/auth/impersonate",
         json={"target_user_id": str(target.id)},
         headers={"Authorization": f"Bearer {token}"},
@@ -154,31 +102,30 @@ def test_impersonate_without_permission_returns_403(db, tenant_a):
     assert resp.status_code == 403
 
 
-def test_impersonate_cross_tenant_returns_404(db, tenant_a, tenant_b):
-    """9.2 — target de otro tenant → 404."""
-    actor = _create_user(db, tenant_a.id, "actor4@test.com")
-    _grant_permission(db, actor.id, tenant_a.id)
-    cross_tenant_target = _create_user(db, tenant_b.id, "cross@test.com")
+async def test_impersonate_cross_tenant_returns_404(app_client, db_session: AsyncSession):
+    tenant_a = await _create_tenant(db_session)
+    tenant_b = await _create_tenant(db_session)
+    actor = await _create_user(db_session, tenant_a.id)
+    await _grant_permission(db_session, actor.id, tenant_a.id)
+    cross_target = await _create_user(db_session, tenant_b.id)
     token = _token_for(actor)
 
-    client = _client_with_db(db)
-    resp = client.post(
+    resp = await app_client.post(
         "/api/v1/auth/impersonate",
-        json={"target_user_id": str(cross_tenant_target.id)},
+        json={"target_user_id": str(cross_target.id)},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 404
 
 
-def test_impersonate_success(db, tenant_a):
-    """9.3 — impersonación exitosa → 200 + token + audit log IMPERSONACION_INICIAR."""
-    actor = _create_user(db, tenant_a.id, "actor5@test.com")
-    _grant_permission(db, actor.id, tenant_a.id)
-    target = _create_user(db, tenant_a.id, "target2@test.com")
+async def test_impersonate_success(app_client, db_session: AsyncSession):
+    tenant = await _create_tenant(db_session)
+    actor = await _create_user(db_session, tenant.id)
+    await _grant_permission(db_session, actor.id, tenant.id)
+    target = await _create_user(db_session, tenant.id)
     token = _token_for(actor)
 
-    client = _client_with_db(db)
-    resp = client.post(
+    resp = await app_client.post(
         "/api/v1/auth/impersonate",
         json={"target_user_id": str(target.id)},
         headers={"Authorization": f"Bearer {token}"},
@@ -188,41 +135,41 @@ def test_impersonate_success(db, tenant_a):
     assert "impersonate_token" in data
     assert data["token_type"] == "bearer"
 
-    entry = db.query(AuditLog).filter_by(actor_id=actor.id).first()
+    result = await db_session.execute(select(AuditLog).where(AuditLog.actor_id == actor.id))
+    entry = result.scalar_one_or_none()
     assert entry is not None
     assert entry.accion == "IMPERSONACION_INICIAR"
 
 
-def test_impersonate_token_has_impersonado_id(db, tenant_a):
-    """El token emitido contiene claim impersonado_id del target."""
-    actor = _create_user(db, tenant_a.id, "actor6@test.com")
-    _grant_permission(db, actor.id, tenant_a.id)
-    target = _create_user(db, tenant_a.id, "target3@test.com")
+async def test_impersonate_token_has_impersonado_id(app_client, db_session: AsyncSession):
+    tenant = await _create_tenant(db_session)
+    actor = await _create_user(db_session, tenant.id)
+    await _grant_permission(db_session, actor.id, tenant.id)
+    target = await _create_user(db_session, tenant.id)
     token = _token_for(actor)
 
-    client = _client_with_db(db)
-    resp = client.post(
+    resp = await app_client.post(
         "/api/v1/auth/impersonate",
         json={"target_user_id": str(target.id)},
         headers={"Authorization": f"Bearer {token}"},
     )
+    assert resp.status_code == 200
     imp_token = resp.json()["impersonate_token"]
     claims = decode_token(imp_token)
     assert claims["impersonado_id"] == str(target.id)
     assert claims["sub"] == str(actor.id)
 
 
-def test_impersonate_nested_rejected(db, tenant_a):
-    """9.4 — token con impersonado_id activo → 400 impersonación anidada rechazada."""
-    actor = _create_user(db, tenant_a.id, "actor7@test.com")
-    _grant_permission(db, actor.id, tenant_a.id)
-    target = _create_user(db, tenant_a.id, "target4@test.com")
-    target2 = _create_user(db, tenant_a.id, "target5@test.com")
+async def test_impersonate_nested_rejected(app_client, db_session: AsyncSession):
+    tenant = await _create_tenant(db_session)
+    actor = await _create_user(db_session, tenant.id)
+    await _grant_permission(db_session, actor.id, tenant.id)
+    target = await _create_user(db_session, tenant.id)
+    target2 = await _create_user(db_session, tenant.id)
 
     imp_token = _token_for(actor, {"impersonado_id": str(target.id)})
 
-    client = _client_with_db(db)
-    resp = client.post(
+    resp = await app_client.post(
         "/api/v1/auth/impersonate",
         json={"target_user_id": str(target2.id)},
         headers={"Authorization": f"Bearer {imp_token}"},
@@ -233,13 +180,12 @@ def test_impersonate_nested_rejected(db, tenant_a):
 
 # ── POST /impersonate/end ─────────────────────────────────────────────────────
 
-def test_end_impersonation_without_active_session(db, tenant_a):
-    """9.5 — token sin impersonación → 400."""
-    actor = _create_user(db, tenant_a.id, "actor8@test.com")
+async def test_end_impersonation_without_active_session(app_client, db_session: AsyncSession):
+    tenant = await _create_tenant(db_session)
+    actor = await _create_user(db_session, tenant.id)
     token = _token_for(actor)
 
-    client = _client_with_db(db)
-    resp = client.post(
+    resp = await app_client.post(
         "/api/v1/auth/impersonate/end",
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -247,20 +193,21 @@ def test_end_impersonation_without_active_session(db, tenant_a):
     assert "impersonación activa" in resp.json()["detail"]
 
 
-def test_end_impersonation_success(db, tenant_a):
-    """9.6 — fin de impersonación exitoso → 200 + audit log IMPERSONACION_FINALIZAR."""
-    actor = _create_user(db, tenant_a.id, "actor9@test.com")
-    target = _create_user(db, tenant_a.id, "target6@test.com")
-
+async def test_end_impersonation_success(app_client, db_session: AsyncSession):
+    tenant = await _create_tenant(db_session)
+    actor = await _create_user(db_session, tenant.id)
+    target = await _create_user(db_session, tenant.id)
     imp_token = _token_for(actor, {"impersonado_id": str(target.id)})
 
-    client = _client_with_db(db)
-    resp = client.post(
+    resp = await app_client.post(
         "/api/v1/auth/impersonate/end",
         headers={"Authorization": f"Bearer {imp_token}"},
     )
     assert resp.status_code == 200
 
-    entry = db.query(AuditLog).filter_by(actor_id=actor.id, accion="IMPERSONACION_FINALIZAR").first()
+    result = await db_session.execute(
+        select(AuditLog).where(AuditLog.actor_id == actor.id, AuditLog.accion == "IMPERSONACION_FINALIZAR")
+    )
+    entry = result.scalar_one_or_none()
     assert entry is not None
     assert entry.impersonado_id == target.id

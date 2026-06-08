@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import select, update
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import PasswordResetToken, RefreshToken, User
 
@@ -10,26 +10,28 @@ from app.models.user import PasswordResetToken, RefreshToken, User
 class UserRepository:
 
     @staticmethod
-    def get_by_email(session: Session, tenant_id: uuid.UUID, email: str) -> User | None:
+    async def get_by_email(session: AsyncSession, tenant_id: uuid.UUID, email: str) -> User | None:
         stmt = select(User).where(
             User.tenant_id == tenant_id,
-            User.email == email,
+            func.lower(User.email) == email.lower(),
             User.deleted_at.is_(None),
         )
-        return session.execute(stmt).scalar_one_or_none()
+        result = await session.execute(stmt)
+        return result.scalar_one_or_none()
 
     @staticmethod
-    def get_by_id(session: Session, tenant_id: uuid.UUID, user_id: uuid.UUID) -> User | None:
+    async def get_by_id(session: AsyncSession, tenant_id: uuid.UUID, user_id: uuid.UUID) -> User | None:
         stmt = select(User).where(
             User.tenant_id == tenant_id,
             User.id == user_id,
             User.deleted_at.is_(None),
         )
-        return session.execute(stmt).scalar_one_or_none()
+        result = await session.execute(stmt)
+        return result.scalar_one_or_none()
 
     @staticmethod
-    def create_refresh_token(
-        session: Session,
+    async def create_refresh_token(
+        session: AsyncSession,
         user_id: uuid.UUID,
         tenant_id: uuid.UUID,
         token_hash: str,
@@ -47,22 +49,28 @@ class UserRepository:
         return rt
 
     @staticmethod
-    def get_refresh_token_by_hash(session: Session, token_hash: str) -> RefreshToken | None:
-        stmt = select(RefreshToken).where(RefreshToken.token_hash == token_hash)
-        return session.execute(stmt).scalar_one_or_none()
+    async def get_refresh_token_by_hash(
+        session: AsyncSession, token_hash: str, tenant_id: uuid.UUID
+    ) -> RefreshToken | None:
+        stmt = select(RefreshToken).where(
+            RefreshToken.token_hash == token_hash,
+            RefreshToken.tenant_id == tenant_id,
+        )
+        result = await session.execute(stmt)
+        return result.scalar_one_or_none()
 
     @staticmethod
-    def revoke_refresh_family(session: Session, family_id: uuid.UUID) -> None:
+    async def revoke_refresh_family(session: AsyncSession, family_id: uuid.UUID) -> None:
         stmt = (
             update(RefreshToken)
             .where(RefreshToken.family_id == family_id, RefreshToken.revoked_at.is_(None))
             .values(revoked_at=datetime.now(timezone.utc))
         )
-        session.execute(stmt)
+        await session.execute(stmt)
 
     @staticmethod
-    def create_reset_token(
-        session: Session,
+    async def create_reset_token(
+        session: AsyncSession,
         user_id: uuid.UUID,
         tenant_id: uuid.UUID,
         token_hash: str,
@@ -78,15 +86,21 @@ class UserRepository:
         return prt
 
     @staticmethod
-    def get_reset_token_by_hash(session: Session, token_hash: str) -> PasswordResetToken | None:
-        stmt = select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash)
-        return session.execute(stmt).scalar_one_or_none()
+    async def get_reset_token_by_hash(
+        session: AsyncSession, token_hash: str, tenant_id: uuid.UUID
+    ) -> PasswordResetToken | None:
+        stmt = select(PasswordResetToken).where(
+            PasswordResetToken.token_hash == token_hash,
+            PasswordResetToken.tenant_id == tenant_id,
+        )
+        result = await session.execute(stmt)
+        return result.scalar_one_or_none()
 
     @staticmethod
-    def mark_reset_token_used(session: Session, token_id: uuid.UUID) -> None:
+    async def mark_reset_token_used(session: AsyncSession, token_id: uuid.UUID) -> None:
         stmt = (
             update(PasswordResetToken)
             .where(PasswordResetToken.id == token_id)
             .values(used_at=datetime.now(timezone.utc))
         )
-        session.execute(stmt)
+        await session.execute(stmt)
