@@ -1,12 +1,7 @@
-# Data Encryption Specification
-
-## Purpose
-Define the mechanisms for encrypting and decrypting Personally Identifiable Information (PII) at rest using AES-256-GCM.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Encrypt Sensitive Attributes
-The system MUST encrypt designated PII attributes (DNI, CBU, TOTP secrets) before persisting them to the database using AES-256-GCM. The stored format SHALL be `base64url(nonce[12] || ciphertext+tag)`. The encryption key SHALL be exactly 32 bytes, derived from `ENCRYPTION_KEY` environment variable.
+The system MUST encrypt designated PII attributes (DNI, CBU, TOTP secrets) before persisting them to the database using AES-256-GCM. The stored format SHALL be `base64url(nonce[12] || tag[16] || ciphertext)`. The encryption key SHALL be exactly 32 bytes, derived from `ENCRYPTION_KEY` environment variable.
 
 #### Scenario: Saving a new record with PII
 - **WHEN** the system persists an entity with a PII attribute (e.g., DNI, TOTP secret)
@@ -34,3 +29,9 @@ The system MUST decrypt AES-256-GCM encrypted PII attributes transparently when 
 #### Scenario: Tampered ciphertext rejected
 - **WHEN** the system attempts to decrypt a ciphertext whose GCM authentication tag does not match
 - **THEN** the system MUST raise a decryption error (AES-GCM provides authenticated encryption — tampered data is detected)
+
+## REMOVED Requirements
+
+### Requirement: Fernet-based encryption (AES-128)
+**Reason**: Fernet uses AES-128-CBC internally, which violates the AES-256 requirement from `docs/ARQUITECTURA.md §2` (RNF-08). Replaced by AES-256-GCM via `cryptography.hazmat.primitives.ciphers.aead.AESGCM`.
+**Migration**: Existing ciphertexts encrypted with Fernet are incompatible with AES-256-GCM. Execute the re-encrypt script (documented in `design.md`) before deploying. For development environments, NULL-ify TOTP secret columns and re-enroll 2FA.

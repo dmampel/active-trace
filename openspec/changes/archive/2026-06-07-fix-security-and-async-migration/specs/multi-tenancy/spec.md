@@ -1,9 +1,4 @@
-# Multi-Tenancy Specification
-
-## Purpose
-Define the rules for data isolation across different institutions (tenants) using row-level security enforced at the application layer via a BaseRepository.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Tenant Isolation by Default
 The system MUST scope all database queries to a specific `tenant_id` by default unless explicitly bypassed. All repository operations SHALL use `AsyncSession` (SQLAlchemy 2.0 async). The `BaseRepository` SHALL be the single source of async query patterns for all entities.
@@ -26,7 +21,7 @@ The system MUST NOT allow querying tenant-scoped entities without explicitly pro
 - **THEN** the system MUST raise `MissingTenantScopeError`
 - **AND** the query MUST NOT hit the database
 
----
+## ADDED Requirements
 
 ### Requirement: Repository delete does not commit internally
 `BaseRepository.delete()` SHALL perform the soft-delete operation but SHALL NOT call `session.commit()`. Transaction management (commit/rollback) is the exclusive responsibility of the service or router layer.
@@ -39,8 +34,6 @@ The system MUST NOT allow querying tenant-scoped entities without explicitly pro
 #### Scenario: Delete called standalone
 - **WHEN** a router calls delete and then commits the session itself
 - **THEN** the record is soft-deleted and the commit succeeds
-
----
 
 ### Requirement: All repositories use AsyncSession
 Every repository class (UserRepository, RbacRepository, EstructuraRepository, AuditLogRepository, BaseRepository) SHALL operate exclusively with `AsyncSession`. No synchronous SQLAlchemy sessions SHALL be used in the request path. The only acceptable use of synchronous sessions is in `alembic/env.py` for database migrations.
