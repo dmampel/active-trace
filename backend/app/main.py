@@ -58,10 +58,14 @@ def _build_app() -> FastAPI:
 
     from app.api.v1.routers import me as me_router
     from app.api.v1.routers import estructura as estructura_router
+    from app.api.v1.routers import usuarios as usuarios_router
+    from app.api.v1.routers import asignaciones as asignaciones_router
     app.include_router(health_router.router)
     app.include_router(auth_router.router)
     app.include_router(me_router.router)
     app.include_router(estructura_router.router)
+    app.include_router(usuarios_router.router)
+    app.include_router(asignaciones_router.router)
 
     return app
 

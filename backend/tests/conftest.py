@@ -60,10 +60,7 @@ async def create_tables(test_engine):
     Eso evita que tests con TestClient (que no usan PG real) fallen por DB inexistente.
     """
     from app.models.base import Base
-    import app.models.tenant  # noqa: F401
-    import app.models.user  # noqa: F401
-    import app.models.rbac  # noqa: F401
-    import app.models.audit_log  # noqa: F401
+    import app.models  # noqa: F401 — registra todos los modelos incluyendo asignacion, estructura
 
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

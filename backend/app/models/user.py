@@ -1,11 +1,12 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin, UUIDMixin
+from app.models.estructura import EstadoEntidad
 
 
 class User(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, TenantMixin):
@@ -20,6 +21,25 @@ class User(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, TenantMixin):
     totp_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    # ── Perfil de persona (C-07) ──────────────────────────────────────────────
+    nombre: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    apellidos: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # PII cifrada (AES-256-GCM) — solo Service descifra/cifra, nunca Repository ni Model
+    dni_enc: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    cuil_enc: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    cbu_enc: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    alias_cbu_enc: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    banco: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    regional: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    legajo: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    legajo_profesional: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    facturador: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    estado: Mapped[EstadoEntidad] = mapped_column(
+        Enum(EstadoEntidad, name="estadoentidad"),
+        nullable=False,
+        default=EstadoEntidad.activa,
+    )
 
     __table_args__ = (
         Index("ix_user_tenant_email", "tenant_id", "email", unique=True),

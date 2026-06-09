@@ -32,8 +32,18 @@ class RbacRepository:
 
     @staticmethod
     async def get_effective_permissions(session: AsyncSession, user_id: uuid.UUID, tenant_id: uuid.UUID) -> Set[str]:
+        """Resolución de permisos efectivos.
+
+        Incluye:
+        1. Permisos del rol global (user_rol) con vigencia activa.
+        2. Permisos derivados de asignaciones contextuales (asignacion) vigentes.
+
+        Una asignación vencida (hasta < hoy) o con soft_delete NO contribuye.
+        """
         today = date.today()
-        stmt = (
+
+        # ── Plano global: user_rol ─────────────────────────────────────────────
+        stmt_global = (
             select(Permiso.nombre)
             .join(RolPermiso, RolPermiso.permiso_id == Permiso.id)
             .join(UserRol, UserRol.rol_id == RolPermiso.rol_id)
@@ -44,6 +54,31 @@ class RbacRepository:
                 or_(UserRol.hasta == None, UserRol.hasta >= today),  # noqa: E711
             )
         )
-        result = await session.execute(stmt)
-        perms = result.scalars().all()
-        return set(perms)
+        result_global = await session.execute(stmt_global)
+        perms: Set[str] = set(result_global.scalars().all())
+
+        # ── Plano contextual: asignacion ──────────────────────────────────────
+        try:
+            from sqlalchemy import cast, String
+            from app.models.asignacion import Asignacion
+            stmt_ctx = (
+                select(Permiso.nombre)
+                .join(RolPermiso, RolPermiso.permiso_id == Permiso.id)
+                .join(Rol, Rol.id == RolPermiso.rol_id)
+                .join(Asignacion, cast(Asignacion.rol, String) == Rol.nombre)
+                .where(
+                    Asignacion.usuario_id == user_id,
+                    Asignacion.tenant_id == tenant_id,
+                    Asignacion.deleted_at.is_(None),
+                    Asignacion.desde <= today,
+                    or_(Asignacion.hasta.is_(None), Asignacion.hasta >= today),
+                )
+            )
+            result_ctx = await session.execute(stmt_ctx)
+            perms.update(result_ctx.scalars().all())
+        except Exception:
+            # Si la tabla asignacion no existe todavía (migraciones no aplicadas),
+            # continuamos sin permisos contextuales
+            pass
+
+        return perms

@@ -29,6 +29,10 @@ if config.config_file_name is not None:
 from app.models.base import Base  # noqa: E402
 from app.models.tenant import Tenant  # noqa: F401
 from app.models.user import User, RefreshToken, PasswordResetToken  # noqa: F401
+from app.models.rbac import Rol, Permiso, RolPermiso, UserRol  # noqa: F401
+from app.models.audit_log import AuditLog  # noqa: F401
+from app.models.estructura import Carrera, Cohorte, InstanciaDictado, Materia  # noqa: F401
+from app.models.asignacion import Asignacion  # noqa: F401
 
 target_metadata = Base.metadata
 

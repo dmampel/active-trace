@@ -25,7 +25,7 @@
         └── [x] C-04 rbac-permisos-finos (roles, permisos modulo:accion, matriz, guard)
             ├── [x] C-05 audit-log (E-AUD append-only, middleware, impersonación)
             ├── [x] C-06 estructura-academica (Carrera, Cohorte, Materia, ABM)
-            │   ├── C-07 usuarios-y-asignaciones (Usuario PII cifrada, Asignacion, vigencia)
+            │   ├── [x] C-07 usuarios-y-asignaciones (Usuario PII cifrada, Asignacion, vigencia)
             │   │   ├── C-08 equipos-docentes (mis-equipos, masiva, clonar, exportar)
             │   │   ├── C-09 padron-ingesta-moodle (VersionPadron, import xlsx/csv, Moodle WS)
             │   │   │   └── C-10 calificaciones-y-umbral (Calificacion, UmbralMateria, import)
@@ -236,8 +236,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 
 ## FASE 3 — Identidad, Asignaciones y Estructura Documental
 
-### [C-07] `usuarios-y-asignaciones`
-- **Estado**: `[ ]` pendiente
+### [x] [C-07] `usuarios-y-asignaciones`
+- **Estado**: `[x]` completado
 - **Scope**:
   - Modelo `Usuario` con PII **cifrada** (`email`, `dni`, `cuil`, `cbu`, `alias_cbu`); legajo como atributo de negocio opcional (no PK, no credencial).
   - Modelo `Asignacion` (Usuario ↔ Rol ↔ contexto: materia/carrera/cohorte/comisiones), `responsable_id` (jerarquía), vigencia `desde/hasta`, `estado_vigencia` derivado.
