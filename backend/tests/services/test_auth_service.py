@@ -292,6 +292,66 @@ async def test_impersonate_cross_tenant_raises_service(db_session: AsyncSession,
         await AuthService.impersonate(db_session, actor, uuid.uuid4())
 
 
+async def _get_or_create_rol(db_session: AsyncSession, nombre: str):
+    from sqlalchemy import select as sa_select
+    from app.models.rbac import Rol
+    result = await db_session.execute(sa_select(Rol).where(Rol.nombre == nombre))
+    rol = result.scalar_one_or_none()
+    if rol is None:
+        rol = Rol(id=uuid.uuid4(), nombre=nombre)
+        db_session.add(rol)
+        await db_session.flush()
+    return rol
+
+
+async def test_impersonate_higher_privilege_raises(db_session: AsyncSession, tenant: Tenant, active_user: User):
+    """Un TUTOR no puede impersonar a un ADMIN — jerarquía de roles."""
+    from datetime import date
+    from app.core.dependencies import CurrentUser
+    from app.models.rbac import UserRol
+
+    target = User(
+        id=uuid.uuid4(),
+        tenant_id=tenant.id,
+        email=f"admin-target-{uuid.uuid4().hex[:6]}@example.com",
+        password_hash=hash_password("pass"),
+        is_active=True,
+    )
+    db_session.add(target)
+    await db_session.flush()
+    admin_rol = await _get_or_create_rol(db_session, "ADMIN")
+    db_session.add(UserRol(user_id=target.id, rol_id=admin_rol.id, tenant_id=tenant.id, desde=date.today()))
+    await db_session.commit()
+
+    actor = CurrentUser(id=active_user.id, tenant_id=tenant.id, roles=["TUTOR"], impersonado_id=None)
+    with pytest.raises(AuthError, match="privilegio"):
+        await AuthService.impersonate(db_session, actor, target.id)
+
+
+async def test_impersonate_equal_privilege_allowed(db_session: AsyncSession, tenant: Tenant, active_user: User):
+    """Un ADMIN puede impersonar a otro ADMIN — mismo nivel es válido."""
+    from datetime import date
+    from app.core.dependencies import CurrentUser
+    from app.models.rbac import UserRol
+
+    target = User(
+        id=uuid.uuid4(),
+        tenant_id=tenant.id,
+        email=f"admin-peer-{uuid.uuid4().hex[:6]}@example.com",
+        password_hash=hash_password("pass"),
+        is_active=True,
+    )
+    db_session.add(target)
+    await db_session.flush()
+    admin_rol = await _get_or_create_rol(db_session, "ADMIN")
+    db_session.add(UserRol(user_id=target.id, rol_id=admin_rol.id, tenant_id=tenant.id, desde=date.today()))
+    await db_session.commit()
+
+    actor = CurrentUser(id=active_user.id, tenant_id=tenant.id, roles=["ADMIN"], impersonado_id=None)
+    token = await AuthService.impersonate(db_session, actor, target.id)
+    assert token
+
+
 async def test_end_impersonation_success_service(db_session: AsyncSession, tenant: Tenant, active_user: User):
     from app.core.dependencies import CurrentUser
     from app.models.audit_log import AuditLog

@@ -70,6 +70,12 @@ class Settings(BaseSettings):
         description="Entorno de ejecución: development | production | test.",
     )
 
+    # ── CORS ──────────────────────────────────────────────────────────────────
+    cors_origins: list[str] = Field(
+        default=["http://localhost:3000"],
+        description="Orígenes permitidos por CORS. En producción, especificá los dominios exactos del frontend.",
+    )
+
     # ── OpenTelemetry ─────────────────────────────────────────────────────────
     otlp_endpoint: str = Field(
         default="",

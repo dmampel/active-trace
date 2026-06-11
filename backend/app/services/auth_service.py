@@ -30,6 +30,20 @@ class AuthError(Exception):
     pass
 
 
+ROLE_HIERARCHY: dict[str, int] = {
+    "TUTOR": 1,
+    "PROFESOR": 2,
+    "NEXO": 3,
+    "FINANZAS": 4,
+    "COORDINADOR": 5,
+    "ADMIN": 6,
+}
+
+
+def _max_role_level(roles: list[str]) -> int:
+    return max((ROLE_HIERARCHY.get(r, 0) for r in roles), default=0)
+
+
 def _build_cipher() -> AES256GCMCipher:
     raw_key = hashlib.sha256(get_settings().encryption_key.encode()).digest()
     return AES256GCMCipher(raw_key)
@@ -196,6 +210,10 @@ class AuthService:
         target = await UserRepository.get_by_id(session, current_user.tenant_id, target_user_id)
         if not target or not target.is_active:
             raise AuthError("Target user not found")
+
+        target_roles = await RbacRepository.get_user_roles(session, target.id, current_user.tenant_id)
+        if _max_role_level(target_roles) > _max_role_level(current_user.roles):
+            raise AuthError("No se puede impersonar a un usuario con mayor nivel de privilegio")
 
         token = create_access_token(
             {

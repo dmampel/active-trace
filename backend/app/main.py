@@ -12,6 +12,7 @@ NO hay lógica de negocio aquí — solo wiring.
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -49,6 +50,14 @@ def _build_app() -> FastAPI:
         redoc_url="/redoc" if settings.environment != "production" else None,
     )
 
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
     # Rate limiting (slowapi) — instancia compartida con los routers
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -60,12 +69,14 @@ def _build_app() -> FastAPI:
     from app.api.v1.routers import estructura as estructura_router
     from app.api.v1.routers import usuarios as usuarios_router
     from app.api.v1.routers import asignaciones as asignaciones_router
+    from app.api.v1.routers import equipos as equipos_router
     app.include_router(health_router.router)
     app.include_router(auth_router.router)
     app.include_router(me_router.router)
     app.include_router(estructura_router.router)
     app.include_router(usuarios_router.router)
     app.include_router(asignaciones_router.router)
+    app.include_router(equipos_router.router)
 
     return app
 
