@@ -65,6 +65,7 @@ class AsignacionService:
         usuario_id: Optional[uuid.UUID] = None,
         materia_id: Optional[uuid.UUID] = None,
         cohorte_id: Optional[uuid.UUID] = None,
+        carrera_id: Optional[uuid.UUID] = None,
         rol: Optional[str] = None,
         vigente_only: bool = False,
     ) -> list[AsignacionRead]:
@@ -74,6 +75,7 @@ class AsignacionService:
             usuario_id=usuario_id,
             materia_id=materia_id,
             cohorte_id=cohorte_id,
+            carrera_id=carrera_id,
             rol=rol,
             vigente_only=vigente_only,
         )
