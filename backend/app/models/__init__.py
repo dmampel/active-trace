@@ -5,6 +5,8 @@ from app.models.rbac import Rol, Permiso, RolPermiso, UserRol
 from app.models.audit_log import AuditLog
 from app.models.estructura import Carrera, Cohorte, EstadoEntidad, InstanciaDictado, Materia
 from app.models.asignacion import Asignacion, RolDominio
+from app.models.padron import VersionPadron, EntradaPadron
+from app.models.tenant_moodle_config import TenantMoodleConfig
 
 __all__ = [
     "Base",
@@ -28,4 +30,7 @@ __all__ = [
     "Materia",
     "Asignacion",
     "RolDominio",
+    "VersionPadron",
+    "EntradaPadron",
+    "TenantMoodleConfig",
 ]

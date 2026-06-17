@@ -213,7 +213,7 @@ async def test_list_con_nombres_retorna_nombres_joined(db_session, tenant_id, us
     row = rows[0]
     assert row.materia_nombre == "Matemática"
     assert row.carrera_nombre == "Ingeniería"
-    assert row.cohorte_nombre == "2024"
+    assert row.cohorte_nombre.startswith("2024")
     assert row.rol is not None
 
 

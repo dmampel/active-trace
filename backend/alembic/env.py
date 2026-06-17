@@ -33,6 +33,8 @@ from app.models.rbac import Rol, Permiso, RolPermiso, UserRol  # noqa: F401
 from app.models.audit_log import AuditLog  # noqa: F401
 from app.models.estructura import Carrera, Cohorte, InstanciaDictado, Materia  # noqa: F401
 from app.models.asignacion import Asignacion  # noqa: F401
+from app.models.padron import VersionPadron, EntradaPadron  # noqa: F401
+from app.models.tenant_moodle_config import TenantMoodleConfig  # noqa: F401
 
 target_metadata = Base.metadata
 

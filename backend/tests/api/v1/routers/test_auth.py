@@ -1,4 +1,3 @@
-import hashlib
 import uuid
 import pyotp
 from datetime import timedelta
@@ -12,14 +11,14 @@ os.environ.setdefault("ENCRYPTION_KEY", "b" * 64)
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import AES256GCMCipher, create_access_token, create_partial_token, hash_password
+from app.core.security import AES256GCMCipher, derive_encryption_key, create_access_token, create_partial_token, hash_password
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.main import app
 
 client = TestClient(app)
 
-_CIPHER = AES256GCMCipher(hashlib.sha256(("b" * 64).encode()).digest())
+_CIPHER = AES256GCMCipher(derive_encryption_key("b" * 64))
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

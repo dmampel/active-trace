@@ -28,15 +28,17 @@ dependencies = [
     "python-json-logger>=3.2.0",
     "cryptography>=43.0.0",
     "redis[asyncio]>=5.2.0",
+    "openpyxl>=3.1.0",
+    "httpx>=0.28.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
-    "httpx>=0.28.0",
     "anyio>=4.7.0",
     "aiosqlite>=0.20.0",
+    "respx>=0.21.0",
 ]
 
 [tool.pytest.ini_options]

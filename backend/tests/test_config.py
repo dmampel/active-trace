@@ -52,8 +52,9 @@ class TestSettings:
         with pytest.raises((ValidationError, ValueError)):
             Settings()
 
-    def test_settings_fails_when_database_url_missing(self, monkeypatch):
+    def test_settings_fails_when_database_url_missing(self, monkeypatch, tmp_path):
         """TRIANGULATE-03: Sin DATABASE_URL la instanciación debe fallar."""
+        monkeypatch.chdir(tmp_path)  # no .env file here — prevents pydantic-settings from loading it
         monkeypatch.delenv("DATABASE_URL", raising=False)
         monkeypatch.setenv("TEST_DATABASE_URL", "postgresql+asyncpg://u:p@localhost/db_test")
         monkeypatch.setenv("SECRET_KEY", "a" * 64)

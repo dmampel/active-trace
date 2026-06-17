@@ -88,6 +88,16 @@ class Settings(BaseSettings):
         description="Endpoint OTLP para exportación de trazas. Vacío = sin exportación.",
     )
 
+    # ── Moodle (opcionales — solo tenants con integración Moodle) ─────────────
+    moodle_url: str = Field(
+        default="",
+        description="URL base de Moodle. Opcional; por tenant se configura en tenant_moodle_config.",
+    )
+    moodle_token: str = Field(
+        default="",
+        description="Token WS global de Moodle. Opcional; por tenant en tenant_moodle_config.",
+    )
+
     # ── Validaciones ──────────────────────────────────────────────────────────
 
     @field_validator("secret_key")

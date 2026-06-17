@@ -1,5 +1,4 @@
 """Tests de AuthService — suite async sobre PostgreSQL real."""
-import hashlib
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -14,7 +13,7 @@ os.environ.setdefault("TEST_DATABASE_URL", "postgresql+asyncpg://postgres:postgr
 os.environ.setdefault("SECRET_KEY", "a" * 64)
 os.environ.setdefault("ENCRYPTION_KEY", "b" * 64)
 
-from app.core.security import AES256GCMCipher, create_partial_token, decode_token, generate_opaque_token, hash_opaque_token, hash_password
+from app.core.security import AES256GCMCipher, derive_encryption_key, create_partial_token, decode_token, generate_opaque_token, hash_opaque_token, hash_password
 from app.models.rbac import Rol, UserRol
 from app.models.tenant import Tenant
 from app.models.user import User
@@ -23,7 +22,7 @@ from app.services.auth_service import AuthError, AuthService
 
 
 # ── Key idéntica a la que usa auth_service en runtime ─────────────────────────
-_CIPHER = AES256GCMCipher(hashlib.sha256(("b" * 64).encode()).digest())
+_CIPHER = AES256GCMCipher(derive_encryption_key("b" * 64))
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────

@@ -26,8 +26,8 @@
             ├── [x] C-05 audit-log (E-AUD append-only, middleware, impersonación)
             ├── [x] C-06 estructura-academica (Carrera, Cohorte, Materia, ABM)
             │   ├── [x] C-07 usuarios-y-asignaciones (Usuario PII cifrada, Asignacion, vigencia)
-            │   │   ├── C-08 equipos-docentes (mis-equipos, masiva, clonar, exportar)
-            │   │   ├── C-09 padron-ingesta-moodle (VersionPadron, import xlsx/csv, Moodle WS)
+            │   │   ├── [x] C-08 equipos-docentes (mis-equipos, masiva, clonar, exportar)
+            │   │   ├── [x] C-09 padron-ingesta-moodle (VersionPadron, import xlsx/csv, Moodle WS)
             │   │   │   └── C-10 calificaciones-y-umbral (Calificacion, UmbralMateria, import)
             │   │   │       └── C-11 analisis-atrasados-reportes (atrasados, ranking, notas finales)
             │   │   │           └── C-12 comunicaciones-cola-worker (Comunicacion, worker, preview, aprobación)
@@ -183,7 +183,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/08_arquitectura_propuesta.md` §3.1, §3.3 (auth, identidad)
   - `docs/ARQUITECTURA.md` §5.1 (ADR-001 auth propio)
 
-### [C-04] `rbac-permisos-finos`
+### [x] [C-04] `rbac-permisos-finos`
 - **Estado**: `[x]` completado
 - **Scope**:
   - Catálogo administrable: tablas `Rol`, `Permiso` (`modulo:accion`), matriz `RolPermiso` (datos, NO hardcode).
@@ -198,7 +198,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/03_actores_y_roles.md` §2 (roles), §3 (RBAC, matriz §3.3), §5 (vigencia)
   - `knowledge-base/08_arquitectura_propuesta.md` §3.2 (RBAC permisos finos)
 
-### [C-05] `audit-log`
+### [x] [C-05] `audit-log`
 - **Estado**: `[x]` completo — 2026-06-07
 - **Scope**:
   - Modelo `AuditLog` (E-AUD) **append-only**: sin update ni delete a nivel app y DB. Campos: actor, impersonado, materia, accion, detalle JSON, filas_afectadas, ip, user_agent, fecha_hora.
@@ -217,7 +217,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 
 ## FASE 2 — Entidades Raíz del Dominio Académico
 
-### [C-06] `estructura-academica` ✅
+### [x][C-06] `estructura-academica` ✅
 - **Estado**: `[x]` completo — archivado 2026-06-07
 - **Scope**:
   - Modelos: `Carrera`, `Cohorte`, `Materia`, `InstanciaDictado` (dos niveles de materia — PA-01 cerrada).
@@ -273,8 +273,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 
 > Todos dependen de `C-07` (usuarios + asignaciones). Se pueden repartir entre los 3 agentes en paralelo.
 
-### [C-08] `equipos-docentes`
-- **Estado**: `[ ]` pendiente
+### [x] [C-08] `equipos-docentes`
+- **Estado**: `[x]` completo
 - **Scope**:
   - Vistas/endpoints sobre `Asignacion`: mis-equipos del docente (F4.2), gestión de asignaciones (F4.3).
   - Asignación masiva (F4.4): bloque docentes × materia × carrera × cohorte × rol con vigencia.
@@ -289,8 +289,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-03 (setup cuatrimestre)
   - `knowledge-base/04_modelo_de_datos.md` §E5 Asignación
 
-### [C-09] `padron-ingesta-moodle`
-- **Estado**: `[ ]` pendiente
+### [x] [C-09] `padron-ingesta-moodle`
+- **Estado**: `[x]` completado
 - **Scope**:
   - Modelos `VersionPadron` + `EntradaPadron` (versionado: una versión activa por materia×cohorte; activar nueva desactiva la anterior).
   - Import de padrón: archivo `.xlsx`/`.csv` (fallback manual) con vista previa (F1.3, F1.4).
