@@ -158,6 +158,85 @@ async def test_list_vigentes_scoped_to_tenant(db_session, tenant_id, tenant2_id,
     assert asig2.id not in ids_t1
 
 
+# ── list_for_usuario_con_nombres ─────────────────────────────────────────────
+
+
+@pytest_asyncio.fixture
+async def contexto_ids(db_session, tenant_id):
+    """Crea Carrera, Materia y Cohorte en el tenant para tests de nombres."""
+    from app.models.estructura import Carrera, Materia, Cohorte, EstadoEntidad
+    from datetime import datetime, timezone
+
+    suffix = uuid.uuid4().hex[:6]
+    carrera = Carrera(
+        id=uuid.uuid4(), tenant_id=tenant_id,
+        codigo=f"ING-{suffix}", nombre="Ingeniería",
+        estado=EstadoEntidad.activa,
+        created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc),
+    )
+    materia = Materia(
+        id=uuid.uuid4(), tenant_id=tenant_id,
+        codigo=f"MAT-{suffix}", nombre="Matemática",
+        estado=EstadoEntidad.activa,
+        created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc),
+    )
+    cohorte = Cohorte(
+        id=uuid.uuid4(), tenant_id=tenant_id,
+        carrera_id=carrera.id, nombre=f"2024-{suffix}",
+        anio=2024, vig_desde=date(2024, 1, 1),
+        estado=EstadoEntidad.activa,
+        created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc),
+    )
+    db_session.add_all([carrera, materia, cohorte])
+    await db_session.commit()
+    return {"carrera_id": carrera.id, "materia_id": materia.id, "cohorte_id": cohorte.id}
+
+
+@pytest.mark.asyncio
+async def test_list_con_nombres_retorna_nombres_joined(db_session, tenant_id, usuario_id, contexto_ids):
+    """list_for_usuario_con_nombres resuelve nombres via JOIN en una sola query."""
+    from app.repositories.asignacion_repository import AsignacionRepository
+    repo = AsignacionRepository(db_session)
+    await repo.create(tenant_id, {
+        "usuario_id": usuario_id,
+        "rol": "PROFESOR",
+        "desde": date.today(),
+        "hasta": None,
+        "responsable_id": None,
+        "comisiones": [],
+        **contexto_ids,
+    })
+
+    rows = await repo.list_for_usuario_con_nombres(usuario_id, tenant_id)
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.materia_nombre == "Matemática"
+    assert row.carrera_nombre == "Ingeniería"
+    assert row.cohorte_nombre == "2024"
+    assert row.rol is not None
+
+
+@pytest.mark.asyncio
+async def test_list_con_nombres_scoped_to_tenant(db_session, tenant_id, tenant2_id, usuario_id, usuario2_id, contexto_ids):
+    """list_for_usuario_con_nombres no filtra fuera del tenant del usuario."""
+    from app.repositories.asignacion_repository import AsignacionRepository
+    repo = AsignacionRepository(db_session)
+    await repo.create(tenant_id, {
+        "usuario_id": usuario_id,
+        "rol": "TUTOR",
+        "desde": date.today(),
+        "hasta": None,
+        "responsable_id": None,
+        "comisiones": [],
+        **contexto_ids,
+    })
+
+    # usuario2 pertenece a tenant2 — no debe aparecer en resultados de tenant1
+    rows_t2 = await repo.list_for_usuario_con_nombres(usuario2_id, tenant_id)
+    assert rows_t2 == []
+
+
 # ── 6.5 Histórico y soft delete ───────────────────────────────────────────────
 
 @pytest.mark.asyncio

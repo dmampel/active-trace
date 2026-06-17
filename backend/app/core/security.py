@@ -2,6 +2,7 @@ import base64
 import hashlib
 import os
 import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -46,6 +47,20 @@ def create_partial_token(user_id: str, tenant_id: str) -> str:
     return jwt.encode(payload, get_settings().secret_key, algorithm="HS256")
 
 
+def create_impersonation_token(data: dict, expires_delta: timedelta) -> tuple[str, str]:
+    """Crea un token de impersonación con JTI para permitir revocación explícita.
+
+    Retorna (token, jti). El JTI debe almacenarse en el blocklist de Redis
+    al finalizar la sesión vía end_impersonation.
+    """
+    jti = str(uuid.uuid4())
+    payload = data.copy()
+    payload["exp"] = datetime.now(timezone.utc) + expires_delta
+    payload["jti"] = jti
+    token = jwt.encode(payload, get_settings().secret_key, algorithm="HS256")
+    return token, jti
+
+
 def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, get_settings().secret_key, algorithms=["HS256"])
@@ -68,6 +83,15 @@ def generate_opaque_token() -> str:
 # ── Cifrado simétrico AES-256-GCM ─────────────────────────────────────────────
 # Formato almacenado: base64url( nonce[12] + ciphertext+tag )
 # AESGCM requiere clave de exactamente 32 bytes.
+
+
+def derive_encryption_key(hex_key: str) -> bytes:
+    """Deriva la clave AES-256 de 32 bytes desde un string hex de ≥64 chars.
+
+    Fuente canónica para todos los servicios — nunca derivar la clave en otro lugar.
+    Requiere que hex_key tenga al menos 64 caracteres (= 32 bytes decodificados).
+    """
+    return bytes.fromhex(hex_key[:64])
 
 class AES256GCMCipher:
     def __init__(self, key: bytes):

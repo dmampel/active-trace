@@ -19,16 +19,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import ASIGNACION_MODIFICAR, record_audit
 from app.core.config import get_settings
-from app.core.security import AES256GCMCipher
+from app.core.security import AES256GCMCipher, derive_encryption_key
 
 
 # ── Cipher singleton (clave de configuración) ─────────────────────────────────
 
 def _build_cipher() -> AES256GCMCipher:
-    key_hex = get_settings().encryption_key
-    # La clave se almacena como hex (min 64 chars = 32 bytes). Tomamos los primeros 32 bytes.
-    key_bytes = bytes.fromhex(key_hex[:64])
-    return AES256GCMCipher(key_bytes)
+    return AES256GCMCipher(derive_encryption_key(get_settings().encryption_key))
 
 
 _cipher: AES256GCMCipher = _build_cipher()

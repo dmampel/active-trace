@@ -18,6 +18,19 @@ services:
       retries: 5
       start_period: 10s
 
+  # ── Redis (JTI blocklist para revocación de tokens de impersonación) ──────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ── API (FastAPI + uvicorn) ──────────────────────────────────────────────────
   api:
     build:
@@ -33,10 +46,13 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-30}
       ENVIRONMENT: ${ENVIRONMENT:-development}
       OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     ports:
       - "8000:8000"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
@@ -59,8 +75,11 @@ services:
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY es requerida}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY es requerida}
       ENVIRONMENT: ${ENVIRONMENT:-development}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:

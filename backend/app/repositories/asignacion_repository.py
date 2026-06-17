@@ -294,6 +294,54 @@ class AsignacionRepository:
         await self.session.commit()
         return result.rowcount
 
+    async def list_for_usuario_con_nombres(
+        self,
+        usuario_id: uuid.UUID,
+        tenant_id: uuid.UUID,
+        materia_id: Optional[uuid.UUID] = None,
+        cohorte_id: Optional[uuid.UUID] = None,
+        carrera_id: Optional[uuid.UUID] = None,
+        rol: Optional[str] = None,
+    ):
+        """Lista asignaciones del usuario con nombres de materia/carrera/cohorte en un JOIN.
+
+        Elimina el N+1 de mis_asignaciones — un solo round-trip a la DB.
+        Retorna Row con columnas: id, rol, desde, hasta, responsable_id,
+        materia_nombre, carrera_nombre, cohorte_nombre.
+        """
+        conditions = [
+            Asignacion.tenant_id == tenant_id,
+            Asignacion.usuario_id == usuario_id,
+            Asignacion.deleted_at.is_(None),
+        ]
+        if materia_id is not None:
+            conditions.append(Asignacion.materia_id == materia_id)
+        if cohorte_id is not None:
+            conditions.append(Asignacion.cohorte_id == cohorte_id)
+        if carrera_id is not None:
+            conditions.append(Asignacion.carrera_id == carrera_id)
+        if rol is not None:
+            conditions.append(Asignacion.rol == rol)
+
+        stmt = (
+            select(
+                Asignacion.id,
+                Asignacion.rol,
+                Asignacion.desde,
+                Asignacion.hasta,
+                Asignacion.responsable_id,
+                Materia.nombre.label("materia_nombre"),
+                Carrera.nombre.label("carrera_nombre"),
+                Cohorte.nombre.label("cohorte_nombre"),
+            )
+            .outerjoin(Materia, Materia.id == Asignacion.materia_id)
+            .outerjoin(Carrera, Carrera.id == Asignacion.carrera_id)
+            .outerjoin(Cohorte, Cohorte.id == Asignacion.cohorte_id)
+            .where(*conditions)
+        )
+        result = await self.session.execute(stmt)
+        return result.all()
+
     async def export_query(self, tenant_id: uuid.UUID):
         """Retorna rows con join a User, Materia, Carrera, Cohorte para CSV export.
 

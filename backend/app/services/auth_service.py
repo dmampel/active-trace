@@ -1,5 +1,4 @@
 import base64
-import hashlib
 import io
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -14,8 +13,10 @@ from app.core.security import (
     AES256GCMCipher,
     InvalidTokenError,
     create_access_token,
+    create_impersonation_token,
     create_partial_token,
     decode_token,
+    derive_encryption_key,
     generate_opaque_token,
     hash_opaque_token,
     hash_password,
@@ -45,8 +46,7 @@ def _max_role_level(roles: list[str]) -> int:
 
 
 def _build_cipher() -> AES256GCMCipher:
-    raw_key = hashlib.sha256(get_settings().encryption_key.encode()).digest()
-    return AES256GCMCipher(raw_key)
+    return AES256GCMCipher(derive_encryption_key(get_settings().encryption_key))
 
 
 _cipher = _build_cipher()
@@ -215,7 +215,7 @@ class AuthService:
         if _max_role_level(target_roles) > _max_role_level(current_user.roles):
             raise AuthError("No se puede impersonar a un usuario con mayor nivel de privilegio")
 
-        token = create_access_token(
+        token, _jti = create_impersonation_token(
             {
                 "sub": str(current_user.id),
                 "tenant_id": str(current_user.tenant_id),
@@ -238,6 +238,11 @@ class AuthService:
     async def end_impersonation(session: AsyncSession, current_user, request=None) -> None:
         if current_user.impersonado_id is None:
             raise AuthError("No hay sesión de impersonación activa")
+
+        if current_user.jti:
+            from app.core.redis_client import revoke_jti
+            ttl = get_settings().impersonation_token_expire_minutes * 60
+            await revoke_jti(current_user.jti, ttl_seconds=ttl)
 
         await record_audit(
             session,

@@ -23,7 +23,7 @@ from typing import Optional
 
 from fastapi import HTTPException, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit import record_audit
@@ -77,7 +77,7 @@ class EquipoService:
     ) -> list[AsignacionDetalleResponse]:
         """Retorna las asignaciones del usuario autenticado dentro del tenant."""
         repo = self._repo()
-        asigs = await repo.list_for_usuario(
+        rows = await repo.list_for_usuario_con_nombres(
             usuario_id=self.current_user.id,
             tenant_id=self.current_user.tenant_id,
             materia_id=materia_id,
@@ -87,57 +87,24 @@ class EquipoService:
         )
 
         results = []
-        for a in asigs:
-            estado = self._derive_estado_vigencia(a.desde, a.hasta)
+        for row in rows:
+            estado = self._derive_estado_vigencia(row.desde, row.hasta)
             if estado_vigencia and estado != estado_vigencia:
                 continue
-
-            # Resolver nombres via joins lazy (cargamos desde IDs)
-            materia_nombre = await self._resolve_materia_nombre(a.materia_id)
-            carrera_nombre = await self._resolve_carrera_nombre(a.carrera_id)
-            cohorte_nombre = await self._resolve_cohorte_nombre(a.cohorte_id)
-
             results.append(
                 AsignacionDetalleResponse(
-                    id=a.id,
-                    rol=a.rol if isinstance(a.rol, str) else a.rol.value,
-                    materia=materia_nombre,
-                    carrera=carrera_nombre,
-                    cohorte=cohorte_nombre,
-                    desde=a.desde,
-                    hasta=a.hasta,
+                    id=row.id,
+                    rol=row.rol if isinstance(row.rol, str) else row.rol.value,
+                    materia=row.materia_nombre,
+                    carrera=row.carrera_nombre,
+                    cohorte=row.cohorte_nombre,
+                    desde=row.desde,
+                    hasta=row.hasta,
                     estado_vigencia=estado,
-                    responsable_id=a.responsable_id,
+                    responsable_id=row.responsable_id,
                 )
             )
         return results
-
-    async def _resolve_materia_nombre(self, materia_id: Optional[uuid.UUID]) -> Optional[str]:
-        if not materia_id:
-            return None
-        from app.models.estructura import Materia
-        result = await self.session.execute(
-            select(Materia.nombre).where(Materia.id == materia_id)
-        )
-        return result.scalar_one_or_none()
-
-    async def _resolve_carrera_nombre(self, carrera_id: Optional[uuid.UUID]) -> Optional[str]:
-        if not carrera_id:
-            return None
-        from app.models.estructura import Carrera
-        result = await self.session.execute(
-            select(Carrera.nombre).where(Carrera.id == carrera_id)
-        )
-        return result.scalar_one_or_none()
-
-    async def _resolve_cohorte_nombre(self, cohorte_id: Optional[uuid.UUID]) -> Optional[str]:
-        if not cohorte_id:
-            return None
-        from app.models.estructura import Cohorte
-        result = await self.session.execute(
-            select(Cohorte.nombre).where(Cohorte.id == cohorte_id)
-        )
-        return result.scalar_one_or_none()
 
     # ── 4.3: buscar usuarios ──────────────────────────────────────────────────
 
@@ -151,6 +118,7 @@ class EquipoService:
             .where(
                 User.tenant_id == self.current_user.tenant_id,
                 User.deleted_at.is_(None),
+                User.is_active.is_(True),
                 or_(
                     User.nombre.ilike(term),
                     User.apellidos.ilike(term),
@@ -177,6 +145,21 @@ class EquipoService:
     ) -> AsignacionMasivaResponse:
         """Crea asignaciones en bloque para múltiples usuarios."""
         tenant_id = self.current_user.tenant_id
+
+        # Validar que todos los usuario_ids pertenecen al tenant (previene IDOR)
+        count_result = await self.session.execute(
+            select(func.count()).where(
+                User.id.in_(data.usuario_ids),
+                User.tenant_id == tenant_id,
+                User.deleted_at.is_(None),
+                User.is_active.is_(True),
+            )
+        )
+        if count_result.scalar_one() != len(data.usuario_ids):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Uno o más usuario_ids no pertenecen al tenant o están inactivos",
+            )
 
         # Validar contexto pertenece al tenant
         await self._validate_contexto_tenant(

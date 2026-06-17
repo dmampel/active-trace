@@ -25,6 +25,7 @@ class CurrentUser:
     tenant_id: uuid.UUID
     roles: list[str]
     impersonado_id: uuid.UUID | None = None
+    jti: str | None = None
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -36,11 +37,14 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     """Resuelve la identidad del usuario EXCLUSIVAMENTE desde el JWT verificado.
 
     Regla de oro: la identidad y el tenant NO se derivan de parámetros de la
     request — solo del token verificado server-side.
+
+    Para tokens de impersonación (con impersonado_id + jti): verifica además
+    que el JTI no esté en el blocklist de Redis (revocación explícita).
     """
     try:
         claims = decode_token(token)
@@ -61,11 +65,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     try:
         impersonado_raw = claims.get("impersonado_id")
         impersonado_id = uuid.UUID(impersonado_raw) if impersonado_raw else None
-        return CurrentUser(
+        jti = claims.get("jti")
+        user = CurrentUser(
             id=uuid.UUID(claims["sub"]),
             tenant_id=uuid.UUID(claims["tenant_id"]),
             roles=claims.get("roles", []),
             impersonado_id=impersonado_id,
+            jti=jti,
         )
     except (KeyError, ValueError) as exc:
         raise HTTPException(
@@ -73,3 +79,23 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
             detail="Invalid token claims",
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
+
+    if user.impersonado_id and user.jti:
+        from app.core.redis_client import is_jti_revoked
+        try:
+            if await is_jti_revoked(user.jti):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Impersonation session revoked",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            # Redis no disponible: fail-closed — no permitir tokens no verificables
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Authentication service temporarily unavailable",
+            )
+
+    return user

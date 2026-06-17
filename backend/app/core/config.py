@@ -76,6 +76,12 @@ class Settings(BaseSettings):
         description="Orígenes permitidos por CORS. En producción, especificá los dominios exactos del frontend.",
     )
 
+    # ── Redis ─────────────────────────────────────────────────────────────────
+    redis_url: str = Field(
+        default="redis://localhost:6379/0",
+        description="URL de conexión a Redis para blocklist de JTI de impersonación.",
+    )
+
     # ── OpenTelemetry ─────────────────────────────────────────────────────────
     otlp_endpoint: str = Field(
         default="",

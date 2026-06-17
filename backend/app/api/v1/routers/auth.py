@@ -100,8 +100,8 @@ async def reset_password(
         await AuthService.reset_password(db, tenant_id, body.token, body.new_password)
         await db.commit()
         return {"message": "Password updated successfully."}
-    except AuthError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except AuthError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
 
 
 @router.post("/2fa/enroll", response_model=TOTPEnrollResponse)
