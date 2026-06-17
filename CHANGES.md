@@ -28,7 +28,7 @@
             │   ├── [x] C-07 usuarios-y-asignaciones (Usuario PII cifrada, Asignacion, vigencia)
             │   │   ├── [x] C-08 equipos-docentes (mis-equipos, masiva, clonar, exportar)
             │   │   ├── [x] C-09 padron-ingesta-moodle (VersionPadron, import xlsx/csv, Moodle WS)
-            │   │   │   └── C-10 calificaciones-y-umbral (Calificacion, UmbralMateria, import)
+            │   │   │   └── [x] C-10 calificaciones-y-umbral (Calificacion, UmbralMateria, import)
             │   │   │       └── C-11 analisis-atrasados-reportes (atrasados, ranking, notas finales)
             │   │   │           └── C-12 comunicaciones-cola-worker (Comunicacion, worker, preview, aprobación)
             │   │   ├── C-13 encuentros-y-guardias (Slot, Instancia, Guardia, export aula)
@@ -305,8 +305,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/06_funcionalidades.md` F1.3, F1.4, F1.5
   - `knowledge-base/08_arquitectura_propuesta.md` §5.1 (Moodle WS, fallback manual)
 
-### [C-10] `calificaciones-y-umbral`
-- **Estado**: `[ ]` pendiente
+### [x] [C-10] `calificaciones-y-umbral`
+- **Estado**: `[x]` completado — archivado 2026-06-17
 - **Scope**:
   - Modelos `Calificacion` (numérica/textual, `aprobado` derivado, origen Importado/Manual) y `UmbralMateria` (umbral_pct por asignación, valores aprobatorios).
   - Importar calificaciones desde archivo del LMS (F1.1): detecta columnas de actividades numéricas (RN-01) y textuales (RN-02), vista previa, selección de actividades.
