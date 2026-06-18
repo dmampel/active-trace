@@ -29,8 +29,8 @@
             │   │   ├── [x] C-08 equipos-docentes (mis-equipos, masiva, clonar, exportar)
             │   │   ├── [x] C-09 padron-ingesta-moodle (VersionPadron, import xlsx/csv, Moodle WS)
             │   │   │   └── [x] C-10 calificaciones-y-umbral (Calificacion, UmbralMateria, import)
-            │   │   │       └── C-11 analisis-atrasados-reportes (atrasados, ranking, notas finales)
-            │   │   │           └── C-12 comunicaciones-cola-worker (Comunicacion, worker, preview, aprobación)
+            │   │   │       └── [x] C-11 analisis-atrasados-reportes (atrasados, ranking, notas finales)
+            │   │   │           └── [x] C-12 comunicaciones-cola-worker (Comunicacion, worker, preview, aprobación)
             │   │   ├── C-13 encuentros-y-guardias (Slot, Instancia, Guardia, export aula)
             │   │   ├── C-14 evaluaciones-y-coloquios (Evaluacion, Reserva, Resultado, FechaAcademica)
             │   │   ├── C-15 avisos-y-acknowledgment (Aviso, ack, scope, vigencia)
@@ -337,7 +337,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/04_modelo_de_datos.md` §E7, §E8
 
 ### [C-12] `comunicaciones-cola-worker`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado
 - **Scope**:
   - Modelo `Comunicacion` (destinatario `[cifrado]`, lote_id, estado: Pendiente → Enviando → Enviado/Error/Cancelado, RN-15).
   - **Worker asíncrono** de despacho (`workers/`): consume cola, transiciona estados. Plantillas con variables de sustitución.

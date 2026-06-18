@@ -8,6 +8,7 @@ from app.models.asignacion import Asignacion, RolDominio
 from app.models.padron import VersionPadron, EntradaPadron
 from app.models.tenant_moodle_config import TenantMoodleConfig
 from app.models.calificacion import Calificacion, UmbralMateria, OrigenCalificacion
+from app.models.comunicacion import Comunicacion, EstadoComunicacion, validar_transicion
 
 __all__ = [
     "Base",
@@ -37,4 +38,7 @@ __all__ = [
     "Calificacion",
     "UmbralMateria",
     "OrigenCalificacion",
+    "Comunicacion",
+    "EstadoComunicacion",
+    "validar_transicion",
 ]

@@ -34,8 +34,36 @@ def _build_app() -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
+        import asyncio
+        from app.core.database import get_session_factory
+        from app.workers.comunicacion_worker import run_worker
+        from app.workers.smtp_client import SmtpClient
+
         init_engine(settings.database_url)
+
+        # Arrancar worker de comunicaciones como background task
+        smtp = SmtpClient()
+        worker_stop = asyncio.Event()
+        poll_interval = getattr(settings, "worker_poll_interval_seconds", 10)
+        worker_task = asyncio.create_task(
+            run_worker(
+                db_session_factory=get_session_factory(),
+                smtp_client=smtp,
+                poll_interval=int(poll_interval),
+                stop_event=worker_stop,
+            ),
+            name="comunicacion-worker",
+        )
+
         yield
+
+        # Detener worker limpiamente al apagar
+        worker_stop.set()
+        try:
+            await asyncio.wait_for(worker_task, timeout=5.0)
+        except (asyncio.TimeoutError, asyncio.CancelledError):
+            worker_task.cancel()
+
         await dispose_engine()
 
     app = FastAPI(
@@ -73,6 +101,7 @@ def _build_app() -> FastAPI:
     from app.api.v1.routers import padron as padron_router
     from app.api.v1.routers import calificaciones as calificaciones_router
     from app.api.v1.routers import analisis as analisis_router
+    from app.api.v1.routers import comunicaciones as comunicaciones_router
     app.include_router(health_router.router)
     app.include_router(auth_router.router)
     app.include_router(me_router.router)
@@ -84,6 +113,7 @@ def _build_app() -> FastAPI:
     app.include_router(padron_router.admin_router)
     app.include_router(calificaciones_router.router)
     app.include_router(analisis_router.router)
+    app.include_router(comunicaciones_router.router)
 
     return app
 

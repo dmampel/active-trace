@@ -10,3 +10,4 @@ class Tenant(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin):
 
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    requiere_aprobacion: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
