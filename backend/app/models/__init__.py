@@ -16,6 +16,16 @@ from app.models.encuentro import (
     SlotEncuentro,
 )
 from app.models.guardia import EstadoGuardia, Guardia
+from app.models.evaluacion import (
+    TipoEvaluacion,
+    EstadoReserva,
+    TipoFechaAcademica,
+    Evaluacion,
+    EvaluacionAlumno,
+    ReservaEvaluacion,
+    ResultadoEvaluacion,
+    FechaAcademica,
+)
 
 __all__ = [
     "Base",
@@ -54,4 +64,12 @@ __all__ = [
     "InstanciaEncuentro",
     "EstadoGuardia",
     "Guardia",
+    "TipoEvaluacion",
+    "EstadoReserva",
+    "TipoFechaAcademica",
+    "Evaluacion",
+    "EvaluacionAlumno",
+    "ReservaEvaluacion",
+    "ResultadoEvaluacion",
+    "FechaAcademica",
 ]

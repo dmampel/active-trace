@@ -32,7 +32,7 @@
             │   │   │       └── [x] C-11 analisis-atrasados-reportes (atrasados, ranking, notas finales)
             │   │   │           └── [x] C-12 comunicaciones-cola-worker (Comunicacion, worker, preview, aprobación)
             │   │   ├── [x] C-13 encuentros-y-guardias (Slot, Instancia, Guardia, export aula)
-            │   │   ├── C-14 evaluaciones-y-coloquios (Evaluacion, Reserva, Resultado, FechaAcademica)
+            │   │   ├── [x] C-14 evaluaciones-y-coloquios (Evaluacion, Reserva, Resultado, FechaAcademica)
             │   │   ├── C-15 avisos-y-acknowledgment (Aviso, ack, scope, vigencia)
             │   │   ├── C-16 tareas-internas (Tarea, ComentarioTarea, workflow)
             │   │   ├── C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
@@ -370,8 +370,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/06_funcionalidades.md` Épica 6 (F6.1–F6.6)
   - `knowledge-base/07_flujos_principales.md` FL-06 (encuentros recurrentes)
 
-### [C-14] `evaluaciones-y-coloquios`
-- **Estado**: `[ ]` pendiente
+### [x] [C-14] `evaluaciones-y-coloquios`
+- **Estado**: `[x]` completado — archivado 2026-06-18
 - **Scope**:
   - Modelos `Evaluacion`, `ReservaEvaluacion`, `ResultadoEvaluacion`.
   - Crear convocatoria de coloquio (F7.3): materia, instancia, días y cupos. Importar alumnos a convocatoria (F7.2). Listado de convocatorias (F7.4). Panel de métricas (F7.1). Admin global (F7.5).
