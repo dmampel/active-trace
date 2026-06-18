@@ -102,6 +102,8 @@ def _build_app() -> FastAPI:
     from app.api.v1.routers import calificaciones as calificaciones_router
     from app.api.v1.routers import analisis as analisis_router
     from app.api.v1.routers import comunicaciones as comunicaciones_router
+    from app.api.v1.routers import encuentros as encuentros_router
+    from app.api.v1.routers import guardias as guardias_router
     app.include_router(health_router.router)
     app.include_router(auth_router.router)
     app.include_router(me_router.router)
@@ -114,6 +116,8 @@ def _build_app() -> FastAPI:
     app.include_router(calificaciones_router.router)
     app.include_router(analisis_router.router)
     app.include_router(comunicaciones_router.router)
+    app.include_router(encuentros_router.router)
+    app.include_router(guardias_router.router)
 
     return app
 

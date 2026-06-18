@@ -9,6 +9,13 @@ from app.models.padron import VersionPadron, EntradaPadron
 from app.models.tenant_moodle_config import TenantMoodleConfig
 from app.models.calificacion import Calificacion, UmbralMateria, OrigenCalificacion
 from app.models.comunicacion import Comunicacion, EstadoComunicacion, validar_transicion
+from app.models.encuentro import (
+    DiaSemana,
+    EstadoInstanciaEncuentro,
+    InstanciaEncuentro,
+    SlotEncuentro,
+)
+from app.models.guardia import EstadoGuardia, Guardia
 
 __all__ = [
     "Base",
@@ -41,4 +48,10 @@ __all__ = [
     "Comunicacion",
     "EstadoComunicacion",
     "validar_transicion",
+    "DiaSemana",
+    "EstadoInstanciaEncuentro",
+    "SlotEncuentro",
+    "InstanciaEncuentro",
+    "EstadoGuardia",
+    "Guardia",
 ]
