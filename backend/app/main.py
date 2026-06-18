@@ -72,6 +72,7 @@ def _build_app() -> FastAPI:
     from app.api.v1.routers import equipos as equipos_router
     from app.api.v1.routers import padron as padron_router
     from app.api.v1.routers import calificaciones as calificaciones_router
+    from app.api.v1.routers import analisis as analisis_router
     app.include_router(health_router.router)
     app.include_router(auth_router.router)
     app.include_router(me_router.router)
@@ -82,6 +83,7 @@ def _build_app() -> FastAPI:
     app.include_router(padron_router.router)
     app.include_router(padron_router.admin_router)
     app.include_router(calificaciones_router.router)
+    app.include_router(analisis_router.router)
 
     return app
 
