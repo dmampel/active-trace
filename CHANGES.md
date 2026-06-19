@@ -34,7 +34,7 @@
             │   │   ├── [x] C-13 encuentros-y-guardias (Slot, Instancia, Guardia, export aula)
             │   │   ├── [x] C-14 evaluaciones-y-coloquios (Evaluacion, Reserva, Resultado, FechaAcademica)
             │   │   ├── [x] C-15 avisos-y-acknowledgment (Aviso, ack, scope, vigencia)
-            │   │   ├── C-16 tareas-internas (Tarea, ComentarioTarea, workflow)
+            │   │   ├── [x] C-16 tareas-internas (Tarea, ComentarioTarea, workflow)
             │   │   ├── C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
             │   │   └── C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
             │   ├── C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
@@ -401,8 +401,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/06_funcionalidades.md` F3.5
   - `knowledge-base/07_flujos_principales.md` FL-09 (publicación de aviso)
 
-### [C-16] `tareas-internas`
-- **Estado**: `[ ]` pendiente
+### [x] [C-16] `tareas-internas`
+- **Estado**: `[x]` completo
 - **Scope**:
   - Modelos `Tarea` (asignado_a, asignado_por, estado Pendiente/En progreso/Resuelta/Cancelada, contexto_id) y `ComentarioTarea`.
   - Mis tareas (F8.1); asignar/delegar tarea a otro docente (F8.2); administración global con filtros (F8.3); cambio de estado + comentarios (workflow asincrónico).
