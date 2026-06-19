@@ -112,6 +112,8 @@ def _build_app() -> FastAPI:
     from app.api.v1.routers import liquidaciones as liquidaciones_router
     from app.api.v1.routers import facturas as facturas_router
     from app.api.v1.routers import auditoria as auditoria_router
+    from app.api.v1.routers import perfil as perfil_router
+    from app.api.v1.routers import inbox as inbox_router
     app.include_router(health_router.router)
     app.include_router(auth_router.router)
     app.include_router(me_router.router)
@@ -134,6 +136,8 @@ def _build_app() -> FastAPI:
     app.include_router(liquidaciones_router.router)
     app.include_router(facturas_router.router)
     app.include_router(auditoria_router.router)
+    app.include_router(perfil_router.router)
+    app.include_router(inbox_router.router)
 
     return app
 

@@ -30,6 +30,7 @@ from app.models.aviso import AlcanceAviso, SeveridadAviso, Aviso, Acknowledgment
 from app.models.tarea import EstadoTarea, Tarea, ComentarioTarea
 from app.models.programa_materia import ProgramaMateria
 from app.models.liquidacion import EstadoLiquidacion, EstadoFactura, SalarioBase, SalarioPlus, Liquidacion, Factura
+from app.models.mensajeria import HiloMensaje, MensajeInterno
 
 __all__ = [
     "Base",
@@ -90,4 +91,6 @@ __all__ = [
     "SalarioPlus",
     "Liquidacion",
     "Factura",
+    "HiloMensaje",
+    "MensajeInterno",
 ]

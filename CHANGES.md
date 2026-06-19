@@ -38,7 +38,7 @@
             │   │   ├── [x] C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
             │   │   └── [x] C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
             │   ├── [x] C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
-            │   ├── C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
+            │   ├── [x] C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
             │   └── C-21 frontend-shell-y-auth (SPA shell, login, guard, cliente HTTP)
             │       ├── C-22 frontend-academico-docente (importación, atrasados, comunicaciones)
             │       ├── C-23 frontend-coordinacion (equipos, avisos, tareas, monitores)
@@ -448,7 +448,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/04_modelo_de_datos.md` §E-AUD
 
 ### [C-20] `perfil-y-mensajeria-interna`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completo
 - **Scope**:
   - Editar perfil propio (F11.1): nombre, datos fiscales/bancarios, regional, modalidad de cobro; CUIL solo lectura.
   - Bandeja de mensajes interna (F3.4, F11.2, FL-10): hilos recibidos, responder dentro del hilo. Mensajería entre usuarios registrados (paralela a comunicaciones a alumnos).
