@@ -88,6 +88,19 @@ class Settings(BaseSettings):
         description="Endpoint OTLP para exportación de trazas. Vacío = sin exportación.",
     )
 
+    # ── Auditoría — panel de métricas (C-19) ──────────────────────────────────
+    auditoria_log_limite_default: int = Field(
+        default=200,
+        ge=1,
+        description="Cantidad de registros devueltos por defecto en el log de últimas acciones.",
+    )
+    auditoria_log_limite_max: int = Field(
+        default=1000,
+        ge=1,
+        description="Tope máximo de registros permitido en el log de últimas acciones. "
+        "Cualquier límite mayor se recorta a este valor.",
+    )
+
     # ── Moodle (opcionales — solo tenants con integración Moodle) ─────────────
     moodle_url: str = Field(
         default="",

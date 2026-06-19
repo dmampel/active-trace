@@ -37,7 +37,7 @@
             │   │   ├── [x] C-16 tareas-internas (Tarea, ComentarioTarea, workflow)
             │   │   ├── [x] C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
             │   │   └── [x] C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
-            │   ├── C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
+            │   ├── [x] C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
             │   ├── C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
             │   └── C-21 frontend-shell-y-auth (SPA shell, login, guard, cliente HTTP)
             │       ├── C-22 frontend-academico-docente (importación, atrasados, comunicaciones)
@@ -433,8 +433,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-08 (liquidación)
   - `knowledge-base/10_preguntas_abiertas.md` PA-22, PA-23 (mapeo y acumulación de Plus — confirmar antes)
 
-### [C-19] `panel-auditoria-metricas`
-- **Estado**: `[ ]` pendiente
+### [x] [C-19] `panel-auditoria-metricas`
+- **Estado**: `[x]` completo — archivado 2026-06-19
 - **Scope**:
   - Panel de interacciones (F9.1): acciones por día, estado de comunicaciones por docente, interacciones por docente×materia, log de últimas acciones (máx configurable, defecto 200).
   - Log completo de auditoría (F9.2, RN-23/24) con filtros: rango de fechas, materia, usuario, estado.
