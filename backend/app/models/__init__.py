@@ -26,6 +26,7 @@ from app.models.evaluacion import (
     ResultadoEvaluacion,
     FechaAcademica,
 )
+from app.models.aviso import AlcanceAviso, SeveridadAviso, Aviso, AcknowledgmentAviso
 
 __all__ = [
     "Base",
@@ -72,4 +73,8 @@ __all__ = [
     "ReservaEvaluacion",
     "ResultadoEvaluacion",
     "FechaAcademica",
+    "AlcanceAviso",
+    "SeveridadAviso",
+    "Aviso",
+    "AcknowledgmentAviso",
 ]

@@ -33,7 +33,7 @@
             │   │   │           └── [x] C-12 comunicaciones-cola-worker (Comunicacion, worker, preview, aprobación)
             │   │   ├── [x] C-13 encuentros-y-guardias (Slot, Instancia, Guardia, export aula)
             │   │   ├── [x] C-14 evaluaciones-y-coloquios (Evaluacion, Reserva, Resultado, FechaAcademica)
-            │   │   ├── C-15 avisos-y-acknowledgment (Aviso, ack, scope, vigencia)
+            │   │   ├── [x] C-15 avisos-y-acknowledgment (Aviso, ack, scope, vigencia)
             │   │   ├── C-16 tareas-internas (Tarea, ComentarioTarea, workflow)
             │   │   ├── C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
             │   │   └── C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
@@ -336,7 +336,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-02 (pasos 5–6)
   - `knowledge-base/04_modelo_de_datos.md` §E7, §E8
 
-### [C-12] `comunicaciones-cola-worker`
+### [x] [C-12] `comunicaciones-cola-worker`
 - **Estado**: `[x]` completado
 - **Scope**:
   - Modelo `Comunicacion` (destinatario `[cifrado]`, lote_id, estado: Pendiente → Enviando → Enviado/Error/Cancelado, RN-15).
@@ -353,7 +353,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-02 (7–8), FL-04 (aprobación)
   - `knowledge-base/08_arquitectura_propuesta.md` §5.2 (worker de cola)
 
-### [C-13] `encuentros-y-guardias`
+### [x] [C-13] `encuentros-y-guardias`
 - **Estado**: `[x]` completado
 - **Scope**:
   - Modelos `SlotEncuentro`, `InstanciaEncuentro`, `Guardia`.
@@ -386,8 +386,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/06_funcionalidades.md` Épica 7 (F7.1–F7.5)
   - `knowledge-base/07_flujos_principales.md` FL-07 (coloquio)
 
-### [C-15] `avisos-y-acknowledgment`
-- **Estado**: `[ ]` pendiente
+### [x] [C-15] `avisos-y-acknowledgment`
+- **Estado**: `[x]` completado — archivado 2026-06-18
 - **Scope**:
   - Modelos `Aviso` (alcance Global/PorMateria/PorCohorte/PorRol, severidad, vigencia inicio/fin, orden, requiere_ack) y `AcknowledgmentAviso`.
   - ABM avisos (F3.5): `avisos:publicar` (COORDINADOR/ADMIN). Visualización por destinatario según rol/alcance/cohorte (RN-18/19/20).
