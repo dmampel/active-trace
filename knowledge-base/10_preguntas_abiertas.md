@@ -24,30 +24,19 @@ Documentado en [04_modelo_de_datos.md](04_modelo_de_datos.md) E2.
 
 ---
 
-### PA-22 — ¿Cuántas claves de Plus existen y cómo se mapean a materias?
+~~### PA-22 — ¿Cuántas claves de Plus existen y cómo se mapean a materias?~~ **CERRADA**
 
-El modelo de liquidación define un **Plus** por combinación `(clave, rol)`, donde la clave agrupa familias de materias (ej.: `PROG` para materias de Programación). Ver [RN-31](05_reglas_de_negocio.md#rn-31) a [RN-38](05_reglas_de_negocio.md#rn-38).
+**Resolución** (2026-06-18): las claves de Plus son **texto libre configurable por el ADMIN de cada tenant** — no hay catálogo fijo en la plataforma. Cada materia puede tener exactamente **una clave asignada** (o ninguna); la relación es `materia → clave` con FK nullable. El mapeo lo define el ADMIN del tenant en la grilla salarial.
 
-**Preguntas abiertas**:
-
-- ¿Cuáles son todas las claves de Plus que existen en el dominio (ej.: `PROG`, `BD`, `ING`, `MAT`, etc.)?
-- ¿Qué materia cae en qué clave? ¿Hay materias sin clave asignada?
-- ¿Ese mapeo es configurable por tenant o está fijo para toda la plataforma?
-- ¿Lo define el ADMIN del tenant o viene preconfigurado desde la institución?
+Documentado en [05_reglas_de_negocio.md RN-33](05_reglas_de_negocio.md#rn-33).
 
 ---
 
-### PA-23 — ¿Cómo se calcula el Plus cuando un docente tiene N comisiones de la misma clave?
+~~### PA-23 — ¿Cómo se calcula el Plus cuando un docente tiene N comisiones de la misma clave?~~ **CERRADA**
 
-Si un PROFESOR tiene tres comisiones de materias que caen bajo la clave `PROG`:
+**Resolución** (2026-06-18): el Plus **se aplica una sola vez por clave activa**, independientemente de cuántas comisiones de esa clave tenga el docente. No hay tope de acumulación porque la regla ya es no-acumulativa. La lógica es uniforme para todos los roles (TUTOR, PROFESOR, COORDINADOR, NEXO).
 
-**Preguntas abiertas**:
-
-- ¿Se acumula `3 × Plus(PROG, PROFESOR)` o se aplica una sola vez sin importar la cantidad de comisiones?
-- ¿Existe un tope de acumulación?
-- ¿La lógica cambia según el rol (TUTOR vs. PROFESOR vs. COORDINADOR)?
-
-**Impacto**: es la regla de negocio central del módulo de liquidaciones. Sin ella no se puede implementar el cálculo.
+Documentado en [05_reglas_de_negocio.md RN-33 y RN-34](05_reglas_de_negocio.md#rn-34).
 
 ---
 
@@ -229,6 +218,8 @@ Las siguientes preguntas que existían en versiones anteriores de este documento
 | PA-04 | Login por email + contraseña; 2FA opcional (TOTP); recuperación por token de un solo uso; alta solo administrativa en MVP | [07_flujos_principales.md](07_flujos_principales.md), [`docs/ARQUITECTURA.md` §5.1](../docs/ARQUITECTURA.md) |
 | PA-06 | Fórmula de liquidación: Base (por rol) + Plus (por clave × rol); ver RN-31 a RN-38 | [05_reglas_de_negocio.md](05_reglas_de_negocio.md) |
 | PA-21 | Impersonación via parámetro de petición: eliminada. La impersonación legítima requiere permiso explícito, sesión diferenciada y auditoría completa | [03_actores_y_roles.md §4](03_actores_y_roles.md), [`docs/ARQUITECTURA.md`](../docs/ARQUITECTURA.md) |
+| PA-22 | Claves de Plus: texto libre configurable por ADMIN del tenant. Cada materia tiene exactamente una clave (o ninguna). No hay catálogo fijo en la plataforma. | [05_reglas_de_negocio.md RN-33](05_reglas_de_negocio.md#rn-33) |
+| PA-23 | Acumulación de Plus: se aplica **una vez por clave activa** sin importar cuántas comisiones tenga el docente de esa clave. Regla uniforme para todos los roles. | [05_reglas_de_negocio.md RN-33–34](05_reglas_de_negocio.md#rn-34) |
 
 ---
 
