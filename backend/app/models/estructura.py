@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import date
 
-from sqlalchemy import Date, Enum, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy import Date, Enum, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -76,6 +76,7 @@ class InstanciaDictado(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, TenantM
     )
     nombre: Mapped[str] = mapped_column(String(255), nullable=False)
     periodo: Mapped[str] = mapped_column(String(20), nullable=False)
+    plus_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     estado: Mapped[EstadoEntidad] = mapped_column(
         Enum(EstadoEntidad, name="estadoentidad"), nullable=False, default=EstadoEntidad.activa
     )

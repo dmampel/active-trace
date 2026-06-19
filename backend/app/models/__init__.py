@@ -29,6 +29,7 @@ from app.models.evaluacion import (
 from app.models.aviso import AlcanceAviso, SeveridadAviso, Aviso, AcknowledgmentAviso
 from app.models.tarea import EstadoTarea, Tarea, ComentarioTarea
 from app.models.programa_materia import ProgramaMateria
+from app.models.liquidacion import EstadoLiquidacion, EstadoFactura, SalarioBase, SalarioPlus, Liquidacion, Factura
 
 __all__ = [
     "Base",
@@ -83,4 +84,10 @@ __all__ = [
     "Tarea",
     "ComentarioTarea",
     "ProgramaMateria",
+    "EstadoLiquidacion",
+    "EstadoFactura",
+    "SalarioBase",
+    "SalarioPlus",
+    "Liquidacion",
+    "Factura",
 ]

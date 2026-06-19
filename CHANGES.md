@@ -36,7 +36,7 @@
             │   │   ├── [x] C-15 avisos-y-acknowledgment (Aviso, ack, scope, vigencia)
             │   │   ├── [x] C-16 tareas-internas (Tarea, ComentarioTarea, workflow)
             │   │   ├── [x] C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
-            │   │   └── C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
+            │   │   └── [x] C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
             │   ├── C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
             │   ├── C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
             │   └── C-21 frontend-shell-y-auth (SPA shell, login, guard, cliente HTTP)
@@ -416,8 +416,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/06_funcionalidades.md` Épica 8 (F8.1–F8.3)
   - `knowledge-base/07_flujos_principales.md` FL-05 (workflow de tareas)
 
-### [C-18] `liquidaciones-y-honorarios`
-- **Estado**: `[ ]` pendiente
+### [x] [C-18] `liquidaciones-y-honorarios`
+- **Estado**: `[x]` completo — archivado 2026-06-19
 - **Scope**:
   - Modelos `SalarioBase` (por rol, vigencia), `SalarioPlus` (grupo × rol, vigencia), `Liquidacion` (base + plus = total, es_nexo, excluido_por_factura, estado Abierta/Cerrada), `Factura`.
   - Cálculo de liquidación del período (FL-08, RN-21): base por rol vigente + plus por grupos. Vista (F10.1), cerrar (F10.2, inmutable RN-22), historial (F10.3).
