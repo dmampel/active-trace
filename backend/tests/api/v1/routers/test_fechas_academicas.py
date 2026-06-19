@@ -114,7 +114,7 @@ class TestCrearFechaAcademica:
     def test_crear_exitosa(self):
         """POST /fechas-academicas → 201."""
         svc = _make_svc()
-        with _client_with_perms(["fechas_academicas:gestionar"], svc_override=svc) as client:
+        with _client_with_perms(["estructura:gestionar"], svc_override=svc) as client:
             resp = client.post("/api/v1/fechas-academicas", json=_PAYLOAD_VALIDO)
         assert resp.status_code == 201
         body = resp.json()
@@ -125,7 +125,7 @@ class TestCrearFechaAcademica:
         """POST /fechas-academicas con tipo inválido → 422."""
         svc = _make_svc()
         payload = {**_PAYLOAD_VALIDO, "tipo": "ExamenFinal"}  # no es un enum válido
-        with _client_with_perms(["fechas_academicas:gestionar"], svc_override=svc) as client:
+        with _client_with_perms(["estructura:gestionar"], svc_override=svc) as client:
             resp = client.post("/api/v1/fechas-academicas", json=payload)
         assert resp.status_code == 422
 
@@ -144,7 +144,7 @@ class TestListarFechasAcademicas:
     def test_listar_sin_filtros(self):
         """GET /fechas-academicas → lista de fechas del tenant."""
         svc = _make_svc()
-        with _client_with_perms(["fechas_academicas:ver"], svc_override=svc) as client:
+        with _client_with_perms(["estructura:leer"], svc_override=svc) as client:
             resp = client.get("/api/v1/fechas-academicas")
         assert resp.status_code == 200
         assert len(resp.json()) == 1
@@ -152,7 +152,7 @@ class TestListarFechasAcademicas:
     def test_filtro_por_materia_id(self):
         """GET /fechas-academicas?materia_id=X → llama listar con materia_id."""
         svc = _make_svc()
-        with _client_with_perms(["fechas_academicas:ver"], svc_override=svc) as client:
+        with _client_with_perms(["estructura:leer"], svc_override=svc) as client:
             resp = client.get(f"/api/v1/fechas-academicas?materia_id={MATERIA_ID}")
         assert resp.status_code == 200
         # Verificar que el servicio fue llamado (el svc mock devuelve la lista)
@@ -161,14 +161,14 @@ class TestListarFechasAcademicas:
     def test_filtro_por_cohorte_id(self):
         """GET /fechas-academicas?cohorte_id=X → filtra por cohorte."""
         svc = _make_svc()
-        with _client_with_perms(["fechas_academicas:ver"], svc_override=svc) as client:
+        with _client_with_perms(["estructura:leer"], svc_override=svc) as client:
             resp = client.get(f"/api/v1/fechas-academicas?cohorte_id={COHORTE_ID}")
         assert resp.status_code == 200
 
     def test_filtro_combinado(self):
         """GET /fechas-academicas?materia_id=X&cohorte_id=Y → ambos filtros."""
         svc = _make_svc()
-        with _client_with_perms(["fechas_academicas:ver"], svc_override=svc) as client:
+        with _client_with_perms(["estructura:leer"], svc_override=svc) as client:
             resp = client.get(
                 f"/api/v1/fechas-academicas?materia_id={MATERIA_ID}&cohorte_id={COHORTE_ID}"
             )
@@ -193,8 +193,8 @@ class TestEditarEliminarFechaAcademica:
             titulo="Primer Parcial (reprogramado)",
         )
         svc = _make_svc(actualizar=actualizada)
-        with _client_with_perms(["fechas_academicas:gestionar"], svc_override=svc) as client:
-            resp = client.put(
+        with _client_with_perms(["estructura:gestionar"], svc_override=svc) as client:
+            resp = client.patch(
                 f"/api/v1/fechas-academicas/{FECHA_ID}",
                 json={"titulo": "Primer Parcial (reprogramado)", "fecha": "2026-05-15"},
             )
@@ -202,11 +202,11 @@ class TestEditarEliminarFechaAcademica:
         assert resp.json()["titulo"] == "Primer Parcial (reprogramado)"
 
     def test_eliminar_fecha(self):
-        """DELETE /fechas-academicas/{id} → 200."""
+        """DELETE /fechas-academicas/{id} → 204."""
         svc = _make_svc()
-        with _client_with_perms(["fechas_academicas:gestionar"], svc_override=svc) as client:
+        with _client_with_perms(["estructura:gestionar"], svc_override=svc) as client:
             resp = client.delete(f"/api/v1/fechas-academicas/{FECHA_ID}")
-        assert resp.status_code == 200
+        assert resp.status_code == 204
 
     def test_eliminar_no_existente_404(self):
         """DELETE /fechas-academicas/{id} no encontrado → 404."""
@@ -214,7 +214,7 @@ class TestEditarEliminarFechaAcademica:
         svc.eliminar = AsyncMock(
             side_effect=HTTPException(status_code=404, detail="No encontrada")
         )
-        with _client_with_perms(["fechas_academicas:gestionar"], svc_override=svc) as client:
+        with _client_with_perms(["estructura:gestionar"], svc_override=svc) as client:
             resp = client.delete(f"/api/v1/fechas-academicas/{uuid.uuid4()}")
         assert resp.status_code == 404
 
@@ -229,7 +229,7 @@ class TestTenantIsolacionFechas:
         svc = _make_svc(listar=[fecha_a])
         user_a = _make_user(tenant_id=TENANT_A)
 
-        with _client_with_perms(["fechas_academicas:ver"], user=user_a, svc_override=svc) as client:
+        with _client_with_perms(["estructura:leer"], user=user_a, svc_override=svc) as client:
             resp = client.get("/api/v1/fechas-academicas")
 
         assert resp.status_code == 200
@@ -241,6 +241,6 @@ class TestTenantIsolacionFechas:
         """POST /fechas-academicas con tenant_id en body → 422 (extra='forbid')."""
         svc = _make_svc()
         payload_con_tenant = {**_PAYLOAD_VALIDO, "tenant_id": str(TENANT_B)}
-        with _client_with_perms(["fechas_academicas:gestionar"], svc_override=svc) as client:
+        with _client_with_perms(["estructura:gestionar"], svc_override=svc) as client:
             resp = client.post("/api/v1/fechas-academicas", json=payload_con_tenant)
         assert resp.status_code == 422

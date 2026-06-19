@@ -208,6 +208,11 @@ class FechaAcademica(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, TenantMix
     titulo: Mapped[str] = mapped_column(String(255), nullable=False)
 
     __table_args__ = (  # type: ignore[assignment]
+        UniqueConstraint(
+            "tenant_id", "materia_id", "cohorte_id", "tipo", "numero", "periodo",
+            name="uq_fecha_academica_contexto",
+        ),
         Index("ix_fecha_academica_tenant", "tenant_id"),
         Index("ix_fecha_academica_materia_cohorte", "materia_id", "cohorte_id"),
+        Index("ix_fecha_academica_materia_cohorte_periodo", "tenant_id", "materia_id", "cohorte_id", "periodo"),
     )

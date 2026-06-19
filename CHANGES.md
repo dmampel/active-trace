@@ -35,7 +35,7 @@
             │   │   ├── [x] C-14 evaluaciones-y-coloquios (Evaluacion, Reserva, Resultado, FechaAcademica)
             │   │   ├── [x] C-15 avisos-y-acknowledgment (Aviso, ack, scope, vigencia)
             │   │   ├── [x] C-16 tareas-internas (Tarea, ComentarioTarea, workflow)
-            │   │   ├── C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
+            │   │   ├── [x] C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
             │   │   └── C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
             │   ├── C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
             │   ├── C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
@@ -253,8 +253,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/06_funcionalidades.md` F4.1, F4.3
   - `docs/ARQUITECTURA.md` §5, §6 (PII cifrada AES-256)
 
-### [C-17] `programas-y-fechas-academicas`
-- **Estado**: `[ ]` pendiente
+### [x] [C-17] `programas-y-fechas-academicas`
+- **Estado**: `[x]` completo
 - **Scope**:
   - Modelos: `ProgramaMateria` (documento por materia × carrera × cohorte, `referencia_archivo` al almacenamiento), `FechaAcademica` (parciales/TP/coloquios por materia × cohorte × número).
   - `/api/programas` (upload + asociar, `estructura:gestionar`) y `/api/fechas-academicas` (CRUD, listado tabular + calendario).

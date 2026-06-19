@@ -60,3 +60,15 @@ class FechaAcademicaUpdate(BaseModel):
     periodo: Optional[str] = None
     fecha: Optional[str] = None
     titulo: Optional[str] = None
+
+
+# Alias para C-17: FechaAcademicaOut es el nombre canónico de la respuesta.
+FechaAcademicaOut = FechaAcademicaRead
+
+
+class LMSFragmentOut(BaseModel):
+    """Respuesta del fragmento LMS generado para un período académico."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    fragmento: str

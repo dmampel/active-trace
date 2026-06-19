@@ -108,6 +108,7 @@ def _build_app() -> FastAPI:
     from app.api.v1.routers import fechas_academicas as fechas_academicas_router
     from app.api.v1.routers import avisos as avisos_router
     from app.api.v1.routers import tareas as tareas_router
+    from app.api.v1.routers import programas as programas_router
     app.include_router(health_router.router)
     app.include_router(auth_router.router)
     app.include_router(me_router.router)
@@ -126,6 +127,7 @@ def _build_app() -> FastAPI:
     app.include_router(fechas_academicas_router.router)
     app.include_router(avisos_router.router)
     app.include_router(tareas_router.router)
+    app.include_router(programas_router.router)
 
     return app
 

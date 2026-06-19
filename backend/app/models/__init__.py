@@ -28,6 +28,7 @@ from app.models.evaluacion import (
 )
 from app.models.aviso import AlcanceAviso, SeveridadAviso, Aviso, AcknowledgmentAviso
 from app.models.tarea import EstadoTarea, Tarea, ComentarioTarea
+from app.models.programa_materia import ProgramaMateria
 
 __all__ = [
     "Base",
@@ -81,4 +82,5 @@ __all__ = [
     "EstadoTarea",
     "Tarea",
     "ComentarioTarea",
+    "ProgramaMateria",
 ]
