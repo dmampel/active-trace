@@ -1,4 +1,4 @@
-import { Outlet, NavLink } from 'react-router-dom'
+import { Outlet, NavLink, useMatch } from 'react-router-dom'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useLogout } from '@/features/auth/hooks/useLogout'
 import { MENU_ITEMS } from '@/app/menuItems'
@@ -7,7 +7,14 @@ export function AppLayout() {
   const { user, hasPermission } = useAuth()
   const { logout, isLoading } = useLogout()
 
+  const comisionMatch = useMatch('/comision/:comisionId/*')
+  const comisionId = comisionMatch?.params.comisionId
+
   const visibleItems = MENU_ITEMS.filter((item) => hasPermission(item.permission))
+
+  const canImport = hasPermission('calificaciones:importar')
+  const isProfesorOrTutor =
+    user?.roles.some((r) => r === 'PROFESOR' || r === 'TUTOR') ?? false
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -34,6 +41,74 @@ export function AppLayout() {
                 </NavLink>
               </li>
             ))}
+            {/* Contextual comisión navigation for PROFESOR and TUTOR */}
+            {comisionId && isProfesorOrTutor && (
+              <>
+                <li className="mt-4 px-4 pb-1">
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Comisión
+                  </span>
+                </li>
+                {canImport && (
+                  <li>
+                    <NavLink
+                      to={`/comision/${comisionId}/importar`}
+                      className={({ isActive }) =>
+                        `block px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive
+                            ? 'bg-indigo-100 text-indigo-700'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`
+                      }
+                    >
+                      Importar calificaciones
+                    </NavLink>
+                  </li>
+                )}
+                <li>
+                  <NavLink
+                    to={`/comision/${comisionId}/analisis`}
+                    className={({ isActive }) =>
+                      `block px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'bg-indigo-100 text-indigo-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`
+                    }
+                  >
+                    Análisis
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to={`/comision/${comisionId}/comunicacion`}
+                    className={({ isActive }) =>
+                      `block px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'bg-indigo-100 text-indigo-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`
+                    }
+                  >
+                    Comunicaciones
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to={`/comision/${comisionId}/monitor`}
+                    className={({ isActive }) =>
+                      `block px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'bg-indigo-100 text-indigo-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`
+                    }
+                  >
+                    Monitor
+                  </NavLink>
+                </li>
+              </>
+            )}
           </ul>
         </nav>
         <div className="p-4 border-t border-gray-200">

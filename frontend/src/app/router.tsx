@@ -6,6 +6,10 @@ import { TwoFactorPage } from '@/features/auth/pages/TwoFactorPage'
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
 import { DashboardPage } from '@/app/pages/DashboardPage'
+import { ImportarCalificacionesPage } from '@/features/importacion/pages/ImportarCalificacionesPage'
+import { AnalisisPage } from '@/features/analisis/pages/AnalisisPage'
+import { ComunicacionPage } from '@/features/comunicacion/pages/ComunicacionPage'
+import { MonitorDocentePage } from '@/features/analisis/pages/MonitorDocentePage'
 
 export const router = createBrowserRouter([
   // Public routes
@@ -24,7 +28,18 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <DashboardPage /> },
-      // C-22 / C-23 / C-24 will add child routes here
+      // C-22 comisión routes
+      {
+        path: 'comision/:comisionId/importar',
+        element: (
+          <AuthGuard requiredPermission="calificaciones:importar">
+            <ImportarCalificacionesPage />
+          </AuthGuard>
+        ),
+      },
+      { path: 'comision/:comisionId/analisis', element: <AnalisisPage /> },
+      { path: 'comision/:comisionId/comunicacion', element: <ComunicacionPage /> },
+      { path: 'comision/:comisionId/monitor', element: <MonitorDocentePage /> },
     ],
   },
 
