@@ -507,8 +507,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/06_funcionalidades.md` Épicas 4, 5, 6, 7, 8
   - `knowledge-base/07_flujos_principales.md` FL-03, FL-05, FL-06, FL-09
 
-### [C-24] `frontend-finanzas-y-admin`
-- **Estado**: `[ ]` pendiente
+### [x] [C-24] `frontend-finanzas-y-admin`
+- **Estado**: `[x]` completado
 - **Scope**:
   - Feature FINANZAS: vista de liquidaciones del período con segmentación (general / NEXO / factura) + KPIs, cerrar liquidación, historial, grilla salarial, gestión de facturas.
   - Feature ADMIN: estructura académica (carreras, cohortes, materias), usuarios del tenant, panel de auditoría y métricas, log completo. Consume `C-06`, `C-07`, `C-18`, `C-19`.
