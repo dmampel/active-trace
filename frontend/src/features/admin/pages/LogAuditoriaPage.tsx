@@ -73,7 +73,7 @@ export function LogAuditoriaPage() {
                     <td className="py-2 pr-4 text-xs text-gray-500 whitespace-nowrap">
                       {new Date(entry.fecha).toLocaleString('es-AR')}
                     </td>
-                    <td className="py-2 pr-4">{entry.usuarioApellido}, {entry.usuarioNombre}</td>
+                    <td className="py-2 pr-4 font-mono text-xs text-gray-600">{entry.usuarioId.slice(0, 8)}…</td>
                     <td className="py-2 pr-4 font-mono text-xs">{entry.accion}</td>
                     <td className="py-2 pr-4 text-gray-500">{entry.materia ?? '—'}</td>
                     <td className="py-2 pr-4 text-right">{entry.filasAfectadas}</td>

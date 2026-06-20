@@ -8,10 +8,11 @@ export function UsuariosAdminPage() {
   const { data: usuarios = [], isLoading } = useUsuariosAdmin(filtroActivo)
   const crear = useCrearUsuario()
   const editar = useEditarUsuario()
+  const [editError, setEditError] = useState<string | null>(null)
 
   const [mostrarForm, setMostrarForm] = useState(false)
   const [form, setForm] = useState({
-    nombre: '', apellido: '', email: '', roles: [] as string[], modalidadCobro: 'liquidacion' as 'factura' | 'liquidacion',
+    nombre: '', apellido: '', email: '', password: '', roles: [] as string[], modalidadCobro: 'liquidacion' as 'factura' | 'liquidacion',
   })
 
   async function handleCrear(e: React.FormEvent) {
@@ -19,7 +20,7 @@ export function UsuariosAdminPage() {
     try {
       await crear.mutateAsync(form)
       setMostrarForm(false)
-      setForm({ nombre: '', apellido: '', email: '', roles: [], modalidadCobro: 'liquidacion' })
+      setForm({ nombre: '', apellido: '', email: '', password: '', roles: [], modalidadCobro: 'liquidacion' })
     } catch {
       // handled by mutation state
     }
@@ -61,16 +62,17 @@ export function UsuariosAdminPage() {
         <form onSubmit={(e) => void handleCrear(e)} className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 space-y-3">
           <div className="flex gap-4 flex-wrap">
             {[
-              { id: 'u-nombre', label: 'Nombre', field: 'nombre' as const },
-              { id: 'u-apellido', label: 'Apellido', field: 'apellido' as const },
-              { id: 'u-email', label: 'Email', field: 'email' as const },
-            ].map(({ id, label, field }) => (
+              { id: 'u-nombre', label: 'Nombre', field: 'nombre' as const, type: 'text' },
+              { id: 'u-apellido', label: 'Apellido', field: 'apellido' as const, type: 'text' },
+              { id: 'u-email', label: 'Email', field: 'email' as const, type: 'email' },
+              { id: 'u-password', label: 'Contraseña', field: 'password' as const, type: 'password' },
+            ].map(({ id, label, field, type }) => (
               <div key={field}>
                 <label htmlFor={id} className="block text-xs text-gray-600 mb-1">{label}</label>
                 <input
                   id={id}
                   aria-label={label}
-                  type={field === 'email' ? 'email' : 'text'}
+                  type={type}
                   value={form[field]}
                   onChange={(e) => setForm((p) => ({ ...p, [field]: e.target.value }))}
                   required
@@ -113,6 +115,12 @@ export function UsuariosAdminPage() {
         </form>
       )}
 
+      {editError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+          {editError}
+        </div>
+      )}
+
       {isLoading ? (
         <p className="text-sm text-gray-500">Cargando…</p>
       ) : (
@@ -148,8 +156,16 @@ export function UsuariosAdminPage() {
                 <td className="py-2">
                   <button
                     type="button"
-                    onClick={() => void editar.mutateAsync({ id: u.id, payload: { activo: !u.activo } })}
-                    className="text-xs text-indigo-600 hover:underline"
+                    disabled={editar.isPending}
+                    onClick={() => {
+                      setEditError(null)
+                      editar.mutateAsync({ id: u.id, payload: { activo: !u.activo } })
+                        .catch((err: unknown) => {
+                          const msg = err instanceof Error ? err.message : 'Error al actualizar usuario'
+                          setEditError(msg)
+                        })
+                    }}
+                    className="text-xs text-indigo-600 hover:underline disabled:opacity-50"
                   >
                     {u.activo ? 'Desactivar' : 'Activar'}
                   </button>

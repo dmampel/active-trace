@@ -69,30 +69,67 @@ export async function editarMateria(
 
 // ── Usuarios ──────────────────────────────────────────────────────────────────
 
+interface UsuarioListItemRaw {
+  id: string
+  email: string
+  nombre: string | null
+  apellidos: string | null
+  regional: string | null
+  facturador: boolean
+  estado: 'activa' | 'inactiva'
+}
+
+function mapUsuario(u: UsuarioListItemRaw): UsuarioResumen {
+  return {
+    id: u.id,
+    nombre: u.nombre ?? '',
+    apellido: u.apellidos ?? '',
+    email: u.email,
+    roles: [],
+    activo: u.estado === 'activa',
+    modalidadCobro: u.facturador ? 'factura' : 'liquidacion',
+    regional: u.regional,
+  }
+}
+
 export async function getUsuariosAdmin(activo?: boolean): Promise<UsuarioResumen[]> {
-  const res = await apiClient.get<UsuarioResumen[]>('/admin/usuarios', {
+  const res = await apiClient.get<UsuarioListItemRaw[]>('/usuarios', {
     params: activo !== undefined ? { activo } : {},
   })
-  return res.data
+  return res.data.map(mapUsuario)
 }
 
 export async function crearUsuario(payload: {
   nombre: string
   apellido: string
   email: string
+  password: string
   roles: string[]
   modalidadCobro: 'factura' | 'liquidacion'
 }): Promise<UsuarioResumen> {
-  const res = await apiClient.post<UsuarioResumen>('/admin/usuarios', payload)
-  return res.data
+  const res = await apiClient.post<UsuarioListItemRaw>('/usuarios', {
+    email: payload.email,
+    password: payload.password,
+    nombre: payload.nombre,
+    apellidos: payload.apellido,
+    facturador: payload.modalidadCobro === 'factura',
+  })
+  return mapUsuario(res.data)
 }
 
 export async function editarUsuario(
   id: string,
   payload: { activo?: boolean; roles?: string[]; modalidadCobro?: string },
 ): Promise<UsuarioResumen> {
-  const res = await apiClient.patch<UsuarioResumen>(`/admin/usuarios/${id}`, payload)
-  return res.data
+  const backendPayload: Record<string, unknown> = {}
+  if (payload.activo !== undefined) {
+    backendPayload.estado = payload.activo ? 'activa' : 'inactiva'
+  }
+  if (payload.modalidadCobro !== undefined) {
+    backendPayload.facturador = payload.modalidadCobro === 'factura'
+  }
+  const res = await apiClient.patch<UsuarioListItemRaw>(`/usuarios/${id}`, backendPayload)
+  return mapUsuario(res.data)
 }
 
 // ── Auditoría ─────────────────────────────────────────────────────────────────
@@ -102,7 +139,29 @@ export async function getPanelAuditoria(filtros: FiltrosAuditoria = {}): Promise
   return res.data
 }
 
+interface AuditLogEntryRaw {
+  id: string
+  fecha_hora: string
+  actor_id: string
+  materia_id: string | null
+  accion: string
+  filas_afectadas: number | null
+  ip: string | null
+  user_agent: string | null
+}
+
 export async function getLogAuditoria(filtros: FiltrosAuditoria = {}): Promise<AuditLogEntry[]> {
-  const res = await apiClient.get<AuditLogEntry[]>('/auditoria/log', { params: filtros })
-  return res.data
+  const res = await apiClient.get<{ items: AuditLogEntryRaw[]; total: number; page: number; page_size: number }>('/auditoria/log', { params: filtros })
+  return res.data.items.map((u) => ({
+    id: u.id,
+    fecha: u.fecha_hora,
+    usuarioId: u.actor_id,
+    usuarioNombre: u.actor_id.slice(0, 8),
+    usuarioApellido: '',
+    accion: u.accion,
+    materia: u.materia_id,
+    filasAfectadas: u.filas_afectadas ?? 0,
+    ip: u.ip ?? '',
+    userAgent: u.user_agent,
+  }))
 }
