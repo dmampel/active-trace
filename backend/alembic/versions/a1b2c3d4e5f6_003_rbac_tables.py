@@ -83,73 +83,8 @@ def upgrade() -> None:
     
     op.bulk_insert(rol_table, rol_data)
 
-    # 3. Seed de permisos
-    permisos = [
-        "estado_academico:ver_propio",
-        "evaluacion:reservar",
-        "avisos:confirmar",
-        "calificaciones:importar",
-        "calificaciones:importar_propio",
-        "atrasados:ver",
-        "atrasados:ver_propio",
-        "entregas:detectar",
-        "entregas:detectar_propio",
-        "comunicacion:enviar",
-        "comunicacion:enviar_propio",
-        "comunicacion:aprobar",
-        "encuentros:gestionar",
-        "encuentros:gestionar_propio",
-        "guardias:registrar",
-        "guardias:registrar_propio",
-        "tareas:gestionar",
-        "tareas:gestionar_propio",
-        "avisos:publicar",
-        "equipos:gestionar",
-        "estructura:gestionar",
-        "usuarios:gestionar",
-        "auditoria:ver",
-        "auditoria:ver_propio",
-        "grilla_salarial:operar",
-        "liquidaciones:gestionar",
-        "facturas:gestionar",
-        "tenant:configurar",
-        "impersonacion:usar"
-    ]
-    permiso_data = []
-    for p in permisos:
-        permiso_data.append({"id": uuid.uuid4(), "nombre": p, "descripcion": f"Permiso {p}", "created_at": now, "updated_at": now})
-    op.bulk_insert(permiso_table, permiso_data)
-
-    # 4. Asociaciones rol_permiso (mapeo)
-    matriz = {
-        "ALUMNO": ["estado_academico:ver_propio", "evaluacion:reservar", "avisos:confirmar"],
-        "TUTOR": ["avisos:confirmar", "atrasados:ver", "entregas:detectar", "encuentros:gestionar", "guardias:registrar_propio"],
-        "PROFESOR": ["avisos:confirmar", "calificaciones:importar_propio", "atrasados:ver_propio", "entregas:detectar_propio", "comunicacion:enviar_propio", "encuentros:gestionar_propio", "guardias:registrar_propio", "tareas:gestionar_propio"],
-        "COORDINADOR": ["avisos:confirmar", "calificaciones:importar", "atrasados:ver", "entregas:detectar", "comunicacion:enviar", "comunicacion:aprobar", "encuentros:gestionar", "guardias:registrar", "tareas:gestionar", "avisos:publicar", "equipos:gestionar", "auditoria:ver_propio"],
-        "NEXO": [],
-        "ADMIN": ["avisos:confirmar", "calificaciones:importar", "atrasados:ver", "entregas:detectar", "comunicacion:enviar", "comunicacion:aprobar", "encuentros:gestionar", "guardias:registrar", "tareas:gestionar", "avisos:publicar", "equipos:gestionar", "estructura:gestionar", "usuarios:gestionar", "auditoria:ver", "tenant:configurar", "impersonacion:usar"],
-        "FINANZAS": ["avisos:confirmar", "auditoria:ver", "grilla_salarial:operar", "liquidaciones:gestionar", "facturas:gestionar"]
-    }
-    
-    # Needs a db connection to get generated UUIDs
-    connection = op.get_bind()
-    rol_rows = connection.execute(sa.text("SELECT id, nombre FROM rol")).fetchall()
-    permiso_rows = connection.execute(sa.text("SELECT id, nombre FROM permiso")).fetchall()
-    
-    rol_map = {row[1]: row[0] for row in rol_rows}
-    permiso_map = {row[1]: row[0] for row in permiso_rows}
-    
-    rol_permiso_data = []
-    for r, p_list in matriz.items():
-        r_id = rol_map.get(r)
-        if not r_id: continue
-        for p in p_list:
-            p_id = permiso_map.get(p)
-            if p_id:
-                rol_permiso_data.append({"id": uuid.uuid4(), "rol_id": r_id, "permiso_id": p_id, "created_at": now, "updated_at": now})
-                
-    if rol_permiso_data:
-        op.bulk_insert(rol_permiso_table, rol_permiso_data)
+    # Se removió el seed de permisos y rol_permiso para evitar duplicados.
+    # Los permisos se insertan en cada migración correspondiente.
 
 
 def downgrade() -> None:

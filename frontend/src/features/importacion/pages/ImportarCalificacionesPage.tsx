@@ -50,8 +50,12 @@ export function ImportarCalificacionesPage() {
   }, [preview])
 
   const handleFileSelected = async (file: File) => {
-    await upload(comisionId, file)
-    setStep(2)
+    try {
+      await upload(comisionId, file)
+      setStep(2)
+    } catch (e) {
+      // Error is handled by the hook and displayed in the UI
+    }
   }
 
   const handleActividadesContinuar = () => {

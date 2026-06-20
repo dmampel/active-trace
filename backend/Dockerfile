@@ -24,8 +24,10 @@ WORKDIR /app
 # Copiar el virtualenv con todas las deps ya instaladas
 COPY --from=builder /app/.venv .venv
 
-# Copiar el código de la aplicación
+# Copiar el código de la aplicación y archivos de migraciones
 COPY app/ app/
+COPY alembic/ alembic/
+COPY alembic.ini .
 
 # Variable de entorno para que el venv sea el Python por defecto
 ENV PATH="/app/.venv/bin:$PATH" \

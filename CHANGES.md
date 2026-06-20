@@ -41,7 +41,7 @@
             │   ├── [x] C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
             │   └── [x] C-21 frontend-shell-y-auth (SPA shell, login, guard, cliente HTTP)
             │       ├── [x] C-22 frontend-academico-docente (importación, atrasados, comunicaciones)
-            │       ├── C-23 frontend-coordinacion (equipos, avisos, tareas, monitores)
+            │       ├── [x] C-23 frontend-coordinacion (equipos, avisos, tareas, monitores)
             │       └── C-24 frontend-finanzas-y-admin (liquidaciones, facturas, estructura, auditoría)
 ```
 
@@ -495,8 +495,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/06_funcionalidades.md` Épicas 1, 2, 3
   - `knowledge-base/07_flujos_principales.md` FL-02, FL-04
 
-### [C-23] `frontend-coordinacion`
-- **Estado**: `[ ]` pendiente
+### [x] [C-23] `frontend-coordinacion`
+- **Estado**: `[x]` completado
 - **Scope**:
   - Features de COORDINADOR/ADMIN: gestión de equipos docentes (mis-equipos, masiva, clonar, vigencia, export), avisos (ABM + scope + ack), tareas internas (workflow), monitores transversales (general F2.7, F2.9), encuentros admin, coloquios.
   - Setup de cuatrimestre (FL-03). Consume `C-08`, `C-13`, `C-14`, `C-15`, `C-16`, `C-17`.

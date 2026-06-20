@@ -63,10 +63,14 @@ export function ComunicacionPage() {
       .filter((a) => seleccionados.includes(a.id))
       .map((a: AlumnoAtrasado) => ({ alumnoId: a.id, nombre: a.nombre, email: a.email }))
 
-    await enviar({ comisionId, destinatarios: destinatariosSeleccionados })
-    setModalOpen(false)
-    setSeleccionados([])
-    navigate(`/comision/${comisionId}/comunicacion`)
+    try {
+      await enviar({ comisionId, destinatarios: destinatariosSeleccionados })
+      setModalOpen(false)
+      setSeleccionados([])
+      navigate(`/comision/${comisionId}/comunicacion`)
+    } catch {
+      // error is handled by mutation state and shown in modal
+    }
   }
 
   const handleCloseModal = () => {

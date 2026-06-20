@@ -100,7 +100,7 @@ def upgrade() -> None:
         ),
         sa.Column("materia_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("umbral_pct", sa.Integer, nullable=False, server_default="60"),
-        sa.Column("valores_aprobatorios", postgresql.JSONB, nullable=False, server_default="'[]'"),
+        sa.Column("valores_aprobatorios", postgresql.JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -130,7 +130,6 @@ def upgrade() -> None:
     connection = op.get_bind()
 
     nuevos_permisos = [
-        ("calificaciones:importar", "Importar calificaciones desde archivo del LMS y configurar umbral"),
         ("calificaciones:leer", "Consultar calificaciones y reportes de aprobación"),
     ]
 
@@ -154,9 +153,6 @@ def upgrade() -> None:
 
     # Asignar permisos a roles
     rol_permisos = [
-        # calificaciones:importar → PROFESOR, COORDINADOR
-        ("PROFESOR", "calificaciones:importar"),
-        ("COORDINADOR", "calificaciones:importar"),
         # calificaciones:leer → PROFESOR, TUTOR, COORDINADOR, ADMIN
         ("PROFESOR", "calificaciones:leer"),
         ("TUTOR", "calificaciones:leer"),
@@ -190,7 +186,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     # Eliminar permisos y sus rol_permiso (cascade via FK en rol_permiso → permiso)
     connection = op.get_bind()
-    for nombre in ("calificaciones:importar", "calificaciones:leer"):
+    for nombre in ("calificaciones:leer",):
         connection.execute(
             sa.text("DELETE FROM permiso WHERE nombre = :nombre"),
             {"nombre": nombre},
