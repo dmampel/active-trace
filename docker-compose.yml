@@ -82,6 +82,23 @@ services:
       redis:
         condition: service_healthy
 
+  # ── Frontend (Vite dev server) ───────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://api:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
     driver: local
