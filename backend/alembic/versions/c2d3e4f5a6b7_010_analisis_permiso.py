@@ -32,7 +32,8 @@ def upgrade() -> None:
     connection.execute(
         sa.text(
             "INSERT INTO permiso (id, nombre, descripcion, created_at, updated_at) "
-            "VALUES (:id, :nombre, :descripcion, :created_at, :updated_at)"
+            "VALUES (:id, :nombre, :descripcion, :created_at, :updated_at) "
+            "ON CONFLICT (nombre) DO NOTHING"
         ),
         {
             "id": permiso_id,
@@ -42,6 +43,12 @@ def upgrade() -> None:
             "updated_at": now,
         },
     )
+    # Re-fetch the actual ID in case the row already existed
+    row = connection.execute(
+        sa.text("SELECT id FROM permiso WHERE nombre = :nombre"),
+        {"nombre": "atrasados:ver"},
+    ).fetchone()
+    permiso_id = row[0] if row else permiso_id
 
     # Asignar a roles: TUTOR, PROFESOR, COORDINADOR, ADMIN
     roles_con_permiso = ["TUTOR", "PROFESOR", "COORDINADOR", "ADMIN"]

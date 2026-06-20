@@ -114,7 +114,9 @@ def _build_app() -> FastAPI:
     from app.api.v1.routers import auditoria as auditoria_router
     from app.api.v1.routers import perfil as perfil_router
     from app.api.v1.routers import inbox as inbox_router
+    from app.api.v1.routers import tenants as tenants_router
     app.include_router(health_router.router)
+    app.include_router(tenants_router.router)
     app.include_router(auth_router.router)
     app.include_router(me_router.router)
     app.include_router(estructura_router.router)

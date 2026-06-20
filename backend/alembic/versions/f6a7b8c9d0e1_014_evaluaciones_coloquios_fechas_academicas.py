@@ -31,20 +31,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # ── 1. Enums ──────────────────────────────────────────────────────────────
-    op.execute(
-        "CREATE TYPE tipoevaluacion AS ENUM "
-        "('Coloquio', 'Parcial', 'Recuperatorio', 'TP')"
-    )
-    op.execute(
-        "CREATE TYPE estadoreserva AS ENUM "
-        "('Activa', 'Cancelada')"
-    )
-    op.execute(
-        "CREATE TYPE tipofechaacademica AS ENUM "
-        "('Parcial', 'TP', 'Coloquio', 'Recuperatorio')"
-    )
-
     # ── 2. Tabla evaluacion ───────────────────────────────────────────────────
     op.create_table(
         "evaluacion",
@@ -72,7 +58,6 @@ def upgrade() -> None:
             sa.Enum(
                 "Coloquio", "Parcial", "Recuperatorio", "TP",
                 name="tipoevaluacion",
-                create_type=False,
             ),
             nullable=False,
         ),
@@ -153,10 +138,9 @@ def upgrade() -> None:
             sa.Enum(
                 "Activa", "Cancelada",
                 name="estadoreserva",
-                create_type=False,
             ),
             nullable=False,
-            server_default="Activa",
+            server_default="activa",
         ),
         sa.Column(
             "created_at",
@@ -242,7 +226,6 @@ def upgrade() -> None:
             sa.Enum(
                 "Parcial", "TP", "Coloquio", "Recuperatorio",
                 name="tipofechaacademica",
-                create_type=False,
             ),
             nullable=False,
         ),

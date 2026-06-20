@@ -10,8 +10,8 @@ from app.models.base import Base, SoftDeleteMixin, TenantMixin, TimestampMixin, 
 
 
 class EstadoEntidad(str, enum.Enum):
-    activa = "Activa"
-    inactiva = "Inactiva"
+    activa = "activa"
+    inactiva = "inactiva"
 
 
 class Carrera(Base, UUIDMixin, TimestampMixin, SoftDeleteMixin, TenantMixin):

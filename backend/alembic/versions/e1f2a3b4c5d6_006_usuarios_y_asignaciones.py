@@ -39,7 +39,7 @@ def upgrade() -> None:
     op.add_column("user", sa.Column("facturador", sa.Boolean(), nullable=False, server_default="false"))
     op.add_column(
         "user",
-        sa.Column("estado", sa.String(20), nullable=False, server_default="Activa"),
+        sa.Column("estado", sa.String(20), nullable=False, server_default="activa"),
     )
 
     # ── 3. Crear tabla asignacion ─────────────────────────────────────────────

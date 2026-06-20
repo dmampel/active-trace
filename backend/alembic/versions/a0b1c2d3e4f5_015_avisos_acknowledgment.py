@@ -27,16 +27,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # ── 1. Enums ──────────────────────────────────────────────────────────────
-    op.execute(
-        "CREATE TYPE alcanceaviso AS ENUM "
-        "('Global', 'PorMateria', 'PorCohorte', 'PorRol')"
-    )
-    op.execute(
-        "CREATE TYPE severidadaviso AS ENUM "
-        "('Info', 'Advertencia', 'Critico')"
-    )
-
     # ── 2. Tabla aviso ────────────────────────────────────────────────────────
     op.create_table(
         "aviso",
@@ -52,7 +42,6 @@ def upgrade() -> None:
             sa.Enum(
                 "Global", "PorMateria", "PorCohorte", "PorRol",
                 name="alcanceaviso",
-                create_type=False,
             ),
             nullable=False,
         ),
@@ -74,7 +63,6 @@ def upgrade() -> None:
             sa.Enum(
                 "Info", "Advertencia", "Critico",
                 name="severidadaviso",
-                create_type=False,
             ),
             nullable=False,
             server_default="Info",

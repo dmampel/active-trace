@@ -33,20 +33,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # ── 1. Enums ──────────────────────────────────────────────────────────────
-    op.execute(
-        "CREATE TYPE diasemana AS ENUM "
-        "('Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo')"
-    )
-    op.execute(
-        "CREATE TYPE estadoinstanciaencuentro AS ENUM "
-        "('Programado', 'Realizado', 'Cancelado')"
-    )
-    op.execute(
-        "CREATE TYPE estadoguardia AS ENUM "
-        "('Pendiente', 'Cubierta', 'Ausente')"
-    )
-
     # ── 2. Tabla slot_encuentro ───────────────────────────────────────────────
     op.create_table(
         "slot_encuentro",
@@ -72,7 +58,6 @@ def upgrade() -> None:
             sa.Enum(
                 "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo",
                 name="diasemana",
-                create_type=False,
             ),
             nullable=True,
         ),
@@ -123,7 +108,6 @@ def upgrade() -> None:
             sa.Enum(
                 "Programado", "Realizado", "Cancelado",
                 name="estadoinstanciaencuentro",
-                create_type=False,
             ),
             nullable=False,
             server_default="Programado",
@@ -176,7 +160,6 @@ def upgrade() -> None:
             sa.Enum(
                 "Pendiente", "Cubierta", "Ausente",
                 name="estadoguardia",
-                create_type=False,
             ),
             nullable=False,
             server_default="Pendiente",

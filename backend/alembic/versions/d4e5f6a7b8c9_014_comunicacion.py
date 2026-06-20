@@ -29,13 +29,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # 1. Crear enum estadocomunicacion
-    op.execute(
-        "CREATE TYPE estadocomunicacion AS ENUM "
-        "('Pendiente', 'Enviando', 'Enviado', 'Error', 'Cancelado')"
-    )
-
-    # 2. Agregar columna requiere_aprobacion a tenant
+    # 1. Agregar columna requiere_aprobacion a tenant
     op.add_column(
         "tenant",
         sa.Column(
@@ -67,7 +61,6 @@ def upgrade() -> None:
             sa.Enum(
                 "Pendiente", "Enviando", "Enviado", "Error", "Cancelado",
                 name="estadocomunicacion",
-                create_type=False,  # ya creado arriba
             ),
             nullable=False,
             server_default="Pendiente",

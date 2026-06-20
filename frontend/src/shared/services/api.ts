@@ -2,7 +2,7 @@ import axios, { type AxiosRequestConfig, type InternalAxiosRequestConfig } from 
 import { tokenStorage } from './tokenStorage'
 
 export const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -26,11 +26,15 @@ function rejectQueue(err: unknown): void {
 // Marker to avoid intercepting the refresh request itself
 const SKIP_REFRESH_HEADER = 'x-skip-refresh-interceptor'
 
-// --- Request interceptor: attach Authorization header ---
+// --- Request interceptor: attach Authorization + X-Tenant-ID headers ---
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = tokenStorage.getAccessToken()
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`
+  }
+  const tenantId = tokenStorage.getTenantId()
+  if (tenantId) {
+    config.headers['X-Tenant-ID'] = tenantId
   }
   return config
 })

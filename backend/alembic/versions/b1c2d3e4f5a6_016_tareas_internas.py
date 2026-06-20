@@ -27,12 +27,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # ── 1. Enum estadotarea ───────────────────────────────────────────────────
-    op.execute(
-        "CREATE TYPE estadotarea AS ENUM "
-        "('pendiente', 'en_progreso', 'resuelta', 'cancelada')"
-    )
-
     # ── 2. Tabla tarea ────────────────────────────────────────────────────────
     op.create_table(
         "tarea",
@@ -66,7 +60,6 @@ def upgrade() -> None:
             sa.Enum(
                 "pendiente", "en_progreso", "resuelta", "cancelada",
                 name="estadotarea",
-                create_type=False,
             ),
             nullable=False,
             server_default="pendiente",

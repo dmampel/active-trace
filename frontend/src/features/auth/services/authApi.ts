@@ -44,18 +44,23 @@ async function login(payload: LoginPayload): Promise<LoginResponse> {
     return { status: '2fa_required', temp_token: data.temp_token }
   }
 
-  if (data.access_token && data.refresh_token && data.user) {
-    return {
-      status: 'ok',
-      session: {
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
-        user: data.user,
-      },
-    }
+  if (!data.access_token || !data.refresh_token) {
+    throw new Error('Respuesta de login inesperada del servidor')
   }
 
-  throw new Error('Respuesta de login inesperada del servidor')
+  // Fetch user profile with the new access token
+  const { data: me } = await apiClient.get<Session['user']>('/me', {
+    headers: { Authorization: `Bearer ${data.access_token}` },
+  })
+
+  return {
+    status: 'ok',
+    session: {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      user: me,
+    },
+  }
 }
 
 async function refresh(refreshToken: string): Promise<RefreshResponse> {
