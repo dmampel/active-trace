@@ -29,6 +29,7 @@ export function AppLayout() {
               <li key={item.path}>
                 <NavLink
                   to={item.path}
+                  end={item.end}
                   className={({ isActive }) =>
                     `block px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive

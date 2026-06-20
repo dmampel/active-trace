@@ -4,19 +4,20 @@ export interface MenuItem {
   label: string
   path: string
   permission: PermissionString
+  end?: boolean
 }
 
 export const MENU_ITEMS: MenuItem[] = [
   // General
-  { label: 'Inicio', path: '/', permission: 'dashboard:read' },
-  { label: 'Comisiones', path: '/comisiones', permission: 'comisiones:read' },
+  { label: 'Inicio', path: '/', permission: 'dashboard:read', end: true },
+  { label: 'Comisiones', path: '/comisiones', permission: 'comisiones:read', end: true },
   { label: 'Alumnos', path: '/alumnos', permission: 'alumnos:read' },
 
   // Docente
-  { label: 'Mis tareas', path: '/tareas', permission: 'tareas:ver' },
+  { label: 'Mis tareas', path: '/tareas', permission: 'tareas:ver', end: true },
 
   // Equipos (C-23)
-  { label: 'Mis equipos', path: '/equipos', permission: 'equipos:ver' },
+  { label: 'Mis equipos', path: '/equipos', permission: 'equipos:ver', end: true },
   { label: 'Asignaciones (admin)', path: '/equipos/admin', permission: 'equipos:admin' },
   { label: 'Asignación masiva', path: '/equipos/masiva', permission: 'equipos:admin' },
   { label: 'Clonar equipo', path: '/equipos/clonar', permission: 'equipos:admin' },
@@ -26,7 +27,7 @@ export const MENU_ITEMS: MenuItem[] = [
 
   // Coordinación (C-23)
   { label: 'Tareas (coord)', path: '/coordinacion/tareas', permission: 'tareas:admin' },
-  { label: 'Monitor general', path: '/coordinacion/monitores', permission: 'atrasados:ver' },
+  { label: 'Monitor general', path: '/coordinacion/monitores', permission: 'atrasados:ver', end: true },
   {
     label: 'Monitor seguimiento',
     path: '/coordinacion/monitores/seguimiento',
@@ -40,12 +41,8 @@ export const MENU_ITEMS: MenuItem[] = [
     permission: 'comunicacion:aprobar',
   },
 
-  // Legacy paths
-  { label: 'Liquidaciones', path: '/liquidaciones', permission: 'liquidaciones:ver' },
-  { label: 'Auditoría', path: '/auditoria', permission: 'auditoria:read' },
-
   // Finanzas (C-24)
-  { label: 'Liquidaciones', path: '/liquidaciones', permission: 'liquidaciones:ver' },
+  { label: 'Liquidaciones', path: '/liquidaciones', permission: 'liquidaciones:ver', end: true },
   { label: 'Grilla salarial', path: '/liquidaciones/grilla-salarial', permission: 'liquidaciones:configurar-salarios' },
   { label: 'Facturas', path: '/liquidaciones/facturas', permission: 'liquidaciones:ver' },
   { label: 'Historial liquidaciones', path: '/liquidaciones/historial', permission: 'liquidaciones:ver' },
@@ -57,6 +54,6 @@ export const MENU_ITEMS: MenuItem[] = [
 
   // Admin — usuarios y auditoría (C-24)
   { label: 'Usuarios', path: '/admin/usuarios', permission: 'usuarios:gestionar' },
-  { label: 'Panel de auditoría', path: '/admin/auditoria', permission: 'auditoria:ver' },
+  { label: 'Panel de auditoría', path: '/admin/auditoria', permission: 'auditoria:ver', end: true },
   { label: 'Log de auditoría', path: '/admin/auditoria/log', permission: 'auditoria:ver' },
 ]
