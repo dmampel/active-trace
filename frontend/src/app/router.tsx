@@ -86,6 +86,40 @@ const AprobacionComunicacionesPage = lazy(() =>
   })),
 )
 
+// C-24 lazy-loaded pages — liquidaciones
+const LiquidacionesPage = lazy(() =>
+  import('@/features/liquidaciones/pages/LiquidacionesPage').then((m) => ({ default: m.LiquidacionesPage })),
+)
+const GrillaSalarialPage = lazy(() =>
+  import('@/features/liquidaciones/pages/GrillaSalarialPage').then((m) => ({ default: m.GrillaSalarialPage })),
+)
+const FacturasPage = lazy(() =>
+  import('@/features/liquidaciones/pages/FacturasPage').then((m) => ({ default: m.FacturasPage })),
+)
+const HistorialLiquidacionesPage = lazy(() =>
+  import('@/features/liquidaciones/pages/HistorialLiquidacionesPage').then((m) => ({ default: m.HistorialLiquidacionesPage })),
+)
+
+// C-24 lazy-loaded pages — admin
+const CarrerasPage = lazy(() =>
+  import('@/features/admin/pages/CarrerasPage').then((m) => ({ default: m.CarrerasPage })),
+)
+const CohorteAdminPage = lazy(() =>
+  import('@/features/admin/pages/CohorteAdminPage').then((m) => ({ default: m.CohorteAdminPage })),
+)
+const MateriasPage = lazy(() =>
+  import('@/features/admin/pages/MateriasPage').then((m) => ({ default: m.MateriasPage })),
+)
+const UsuariosAdminPage = lazy(() =>
+  import('@/features/admin/pages/UsuariosAdminPage').then((m) => ({ default: m.UsuariosAdminPage })),
+)
+const AuditoriaPage = lazy(() =>
+  import('@/features/admin/pages/AuditoriaPage').then((m) => ({ default: m.AuditoriaPage })),
+)
+const LogAuditoriaPage = lazy(() =>
+  import('@/features/admin/pages/LogAuditoriaPage').then((m) => ({ default: m.LogAuditoriaPage })),
+)
+
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<div className="p-8 text-gray-400 text-sm">Cargando…</div>}>{children}</Suspense>
 }
@@ -253,6 +287,90 @@ export const router = createBrowserRouter([
         element: (
           <AuthGuard requiredPermission="comunicacion:aprobar">
             <Lazy><AprobacionComunicacionesPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+
+      // C-24 liquidaciones routes
+      {
+        path: 'liquidaciones',
+        element: (
+          <AuthGuard requiredPermission="liquidaciones:ver">
+            <Lazy><LiquidacionesPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'liquidaciones/grilla-salarial',
+        element: (
+          <AuthGuard requiredPermission="liquidaciones:configurar-salarios">
+            <Lazy><GrillaSalarialPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'liquidaciones/facturas',
+        element: (
+          <AuthGuard requiredPermission="liquidaciones:ver">
+            <Lazy><FacturasPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'liquidaciones/historial',
+        element: (
+          <AuthGuard requiredPermission="liquidaciones:ver">
+            <Lazy><HistorialLiquidacionesPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+
+      // C-24 admin routes
+      {
+        path: 'admin/carreras',
+        element: (
+          <AuthGuard requiredPermission="estructura:gestionar">
+            <Lazy><CarrerasPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/cohortes',
+        element: (
+          <AuthGuard requiredPermission="estructura:gestionar">
+            <Lazy><CohorteAdminPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/materias',
+        element: (
+          <AuthGuard requiredPermission="estructura:gestionar">
+            <Lazy><MateriasPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/usuarios',
+        element: (
+          <AuthGuard requiredPermission="usuarios:gestionar">
+            <Lazy><UsuariosAdminPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/auditoria',
+        element: (
+          <AuthGuard requiredPermission="auditoria:ver">
+            <Lazy><AuditoriaPage /></Lazy>
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/auditoria/log',
+        element: (
+          <AuthGuard requiredPermission="auditoria:ver">
+            <Lazy><LogAuditoriaPage /></Lazy>
           </AuthGuard>
         ),
       },

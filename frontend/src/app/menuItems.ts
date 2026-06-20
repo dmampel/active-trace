@@ -41,6 +41,22 @@ export const MENU_ITEMS: MenuItem[] = [
   },
 
   // Legacy paths
-  { label: 'Liquidaciones', path: '/liquidaciones', permission: 'liquidaciones:read' },
+  { label: 'Liquidaciones', path: '/liquidaciones', permission: 'liquidaciones:ver' },
   { label: 'Auditoría', path: '/auditoria', permission: 'auditoria:read' },
+
+  // Finanzas (C-24)
+  { label: 'Liquidaciones', path: '/liquidaciones', permission: 'liquidaciones:ver' },
+  { label: 'Grilla salarial', path: '/liquidaciones/grilla-salarial', permission: 'liquidaciones:configurar-salarios' },
+  { label: 'Facturas', path: '/liquidaciones/facturas', permission: 'liquidaciones:ver' },
+  { label: 'Historial liquidaciones', path: '/liquidaciones/historial', permission: 'liquidaciones:ver' },
+
+  // Admin — estructura académica (C-24)
+  { label: 'Carreras', path: '/admin/carreras', permission: 'estructura:gestionar' },
+  { label: 'Cohortes', path: '/admin/cohortes', permission: 'estructura:gestionar' },
+  { label: 'Materias', path: '/admin/materias', permission: 'estructura:gestionar' },
+
+  // Admin — usuarios y auditoría (C-24)
+  { label: 'Usuarios', path: '/admin/usuarios', permission: 'usuarios:gestionar' },
+  { label: 'Panel de auditoría', path: '/admin/auditoria', permission: 'auditoria:ver' },
+  { label: 'Log de auditoría', path: '/admin/auditoria/log', permission: 'auditoria:ver' },
 ]
